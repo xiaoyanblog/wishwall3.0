@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>便签墙</title>
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <main class="container">
+    <header class="page-header">
+      <h1 class="page-title">祝愿签墙</h1>
+      <p class="page-desc">写下你的心愿，留下你的故事</p>
+    </header>
+
+    <div class="wish-tabs" id="wishTabs">
+      <button class="wish-tab active" type="button" data-filter="all">全部</button>
+      <button class="wish-tab" type="button" data-filter="love">Love</button>
+      <button class="wish-tab" type="button" data-filter="wish">心愿</button>
+      <button class="wish-tab" type="button" data-filter="feedback">反馈</button>
+    </div>
+
+    <section class="wish-board" id="wishBoard" aria-live="polite">
+      <div class="wish-empty" id="wishEmpty">
+        <h3>暂无便签</h3>
+        <p>来贴第一张便签吧。</p>
+      </div>
+    </section>
+  </main>
+
+  <div class="wish-input-bar" id="wishInputBar">
+    <input type="text" class="wish-input-nick" id="wishNick" placeholder="昵称" maxlength="20">
+    <input type="text" class="wish-input-content" id="wishContent" placeholder="写下你想说的话..." maxlength="200">
+    <span class="wish-char-counter" id="wishCharCounter">0/200</span>
+    <div class="wish-colors" id="wishColorPicker" aria-label="颜色">
+      <button class="wish-color-dot active" type="button" data-color="green" style="background:#c8e6c9" aria-label="绿色"></button>
+      <button class="wish-color-dot" type="button" data-color="yellow" style="background:#fff9c4" aria-label="黄色"></button>
+      <button class="wish-color-dot" type="button" data-color="purple" style="background:#e1bee7" aria-label="紫色"></button>
+      <button class="wish-color-dot" type="button" data-color="pink" style="background:#ffcdd2" aria-label="粉色"></button>
+      <button class="wish-color-dot" type="button" data-color="blue" style="background:#bbdefb" aria-label="蓝色"></button>
+      <button class="wish-color-dot" type="button" data-color="orange" style="background:#ffe0b2" aria-label="橙色"></button>
+    </div>
+    <button class="wish-type-btn" id="wishTypeToggle" type="button">Love</button>
+    <button class="wish-btn wish-btn-submit" id="wishSubmitBtn" type="button">发布</button>
+  </div>
+
+  <template id="wishCardTemplate">
+    <article class="wish-card">
+      <div class="wish-card-header">
+        <div class="wish-dots">
+          <span class="wish-dot red"></span>
+          <span class="wish-dot yellow"></span>
+          <span class="wish-dot green"></span>
+        </div>
+        <span class="wish-card-label"></span>
+      </div>
+      <div class="wish-card-body">
+        <span class="wish-card-content"></span>
+        <em class="wish-status-text"></em>
+      </div>
+      <div class="wish-card-done-note"></div>
+      <img class="wish-card-done-img" alt="" loading="lazy">
+      <div class="wish-card-ai"></div>
+      <div class="wish-card-footer">
+        <span class="wish-card-nick"></span>
+        <span class="wish-card-date"></span>
+      </div>
+    </article>
+  </template>
+
+  <div class="wish-toast" id="wishToast"></div>
+  <script src="./script.js"></script>
+</body>
+</html>
