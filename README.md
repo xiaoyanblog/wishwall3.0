@@ -2,7 +2,7 @@
 
 一个可以部署到 Vercel 的轻量便签墙。用户发布留言后会写入 Supabase 数据库，并立即展示在页面上。
 
-本项目参考了 [atangccc/Serenity-Grace](https://github.com/atangccc/Serenity-Grace) 的心愿便签插件，核心代码来自该项目。本代码已得到作者授权。需要注意的是，作者计划后续将相关 WordPress 主题用于售卖，请尊重原作者的授权和后续商业安排。
+本项目参考了 [atangccc/Serenity-Grace](https://github.com/atangccc/Serenity-Grace) 的心愿便签插件，核心代码来自该项目，本代码已得到作者授权。请尊重原作者的授权和后续安排。
 
 ## 功能
 
@@ -249,4 +249,4 @@ POST /api/wishes
 
 - [Serenity-Grace](https://github.com/atangccc/Serenity-Grace)
 
-核心代码来自 `atangccc/Serenity-Grace` 的心愿便签插件。本代码已得到作者授权。作者计划后续将相关 WordPress 主题用于售卖，请尊重原作者的授权和后续商业安排。
+核心代码来自 `atangccc/Serenity-Grace` 的心愿便签插件，本代码已得到作者授权。请尊重原作者的授权和后续安排。
