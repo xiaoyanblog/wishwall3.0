@@ -95,7 +95,8 @@ async function supabaseRequest(path, options = {}) {
     return null;
   }
 
-  return response.json();
+  const text = await response.text();
+  return text ? JSON.parse(text) : null;
 }
 
 function fromDatabaseRow(row) {
