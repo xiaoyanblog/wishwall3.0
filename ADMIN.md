@@ -53,3 +53,6 @@ SUPABASE_SERVICE_ROLE_KEY=你的 service role key / secret key
 - 后台口令建议使用 20 位以上随机字符串，混合大小写字母、数字和符号。
 - 更新到带安全管理的版本后，需要在 Supabase SQL Editor 重新执行最新 `database/schema.sql`。
 - 如果怀疑口令泄露，直接在 Vercel 修改 `ADMIN_TOKEN` 并重新部署。
+## Database reset note
+
+`database/schema.sql` is now a fresh Wish Wall 2.0 reset script. Running the whole file in Supabase SQL Editor will drop and recreate the `wishes`, `security_settings`, and `wish_submission_logs` tables, so old wishes and previous security settings will be deleted.

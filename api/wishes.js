@@ -96,7 +96,11 @@ async function submitWish(req, res) {
       wishPayload.ip_recorded = true;
     }
 
-    await insertWish(wishPayload);
+    await supabaseRequest("/rest/v1/wishes", {
+      method: "POST",
+      headers: { Prefer: "return=minimal" },
+      body: JSON.stringify(wishPayload)
+    });
 
     if (settings.recordIp || settings.dailyLimitEnabled) {
       await recordSubmission(ip).catch((error) => {
@@ -142,49 +146,23 @@ async function supabaseRequest(path, options = {}) {
   return text ? JSON.parse(text) : null;
 }
 
-async function insertWish(payload) {
-  try {
-    return await supabaseRequest("/rest/v1/wishes", {
-      method: "POST",
-      headers: { Prefer: "return=minimal" },
-      body: JSON.stringify(payload)
-    });
-  } catch (error) {
-    if (!payload.ip_address || !String(error.message || "").includes("ip_")) {
-      throw error;
-    }
-
-    const { ip_address, ip_recorded, ...fallbackPayload } = payload;
-    return supabaseRequest("/rest/v1/wishes", {
-      method: "POST",
-      headers: { Prefer: "return=minimal" },
-      body: JSON.stringify(fallbackPayload)
-    });
-  }
-}
-
 async function loadSecuritySettings() {
-  try {
-    const rows = await supabaseRequest("/rest/v1/security_settings?id=eq.1&select=record_ip,daily_limit_enabled,daily_limit_count,captcha_enabled,captcha_site_key,captcha_secret,captcha_verify_url&limit=1");
-    const row = rows && rows[0];
+  const rows = await supabaseRequest("/rest/v1/security_settings?id=eq.1&select=record_ip,daily_limit_enabled,daily_limit_count,captcha_enabled,captcha_site_key,captcha_secret,captcha_verify_url&limit=1");
+  const row = rows && rows[0];
 
-    if (!row) {
-      return defaultSecuritySettings();
-    }
-
-    return {
-      recordIp: Boolean(row.record_ip),
-      dailyLimitEnabled: Boolean(row.daily_limit_enabled),
-      dailyLimitCount: clampNumber(Number(row.daily_limit_count || 5), 1, 1000),
-      captchaEnabled: Boolean(row.captcha_enabled),
-      captchaSiteKey: row.captcha_site_key || "",
-      captchaSecret: row.captcha_secret || "",
-      captchaVerifyUrl: row.captcha_verify_url || ""
-    };
-  } catch (error) {
-    console.error(error);
+  if (!row) {
     return defaultSecuritySettings();
   }
+
+  return {
+    recordIp: Boolean(row.record_ip),
+    dailyLimitEnabled: Boolean(row.daily_limit_enabled),
+    dailyLimitCount: clampNumber(Number(row.daily_limit_count || 5), 1, 1000),
+    captchaEnabled: Boolean(row.captcha_enabled),
+    captchaSiteKey: row.captcha_site_key || "",
+    captchaSecret: row.captcha_secret || "",
+    captchaVerifyUrl: row.captcha_verify_url || ""
+  };
 }
 
 function defaultSecuritySettings() {
@@ -208,28 +186,11 @@ async function countTodaySubmissions(ipAddress) {
 }
 
 async function recordSubmission(ipAddress) {
-  const payload = {
-    ip_address: ipAddress,
-    ip_hash: ""
-  };
-
-  try {
-    await supabaseRequest("/rest/v1/wish_submission_logs", {
-      method: "POST",
-      headers: { Prefer: "return=minimal" },
-      body: JSON.stringify(payload)
-    });
-  } catch (error) {
-    if (!String(error.message || "").includes("ip_address")) {
-      throw error;
-    }
-
-    await supabaseRequest("/rest/v1/wish_submission_logs", {
-      method: "POST",
-      headers: { Prefer: "return=minimal" },
-      body: JSON.stringify({ ip_hash: payload.ip_hash })
-    });
-  }
+  await supabaseRequest("/rest/v1/wish_submission_logs", {
+    method: "POST",
+    headers: { Prefer: "return=minimal" },
+    body: JSON.stringify({ ip_address: ipAddress })
+  });
 }
 
 async function verifyCaptcha({ token, settings, ip }) {
@@ -401,5 +362,5 @@ function readJson(req) {
 
 function setJsonHeaders(res) {
   res.setHeader("Content-Type", "application/json; charset=utf-8");
-  res.setHeader("Cache-Control", "s-maxage=30, stale-while-revalidate=120");
+  res.setHeader("Cache-Control", "no-store");
 }
