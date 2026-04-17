@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>标签墙后台管理</title>
+  <link rel="stylesheet" href="./admin.css">
+</head>
+<body>
+  <main class="admin-shell">
+    <section class="hero-panel">
+      <div>
+        <p class="eyebrow">Wish Wall 2.0</p>
+        <h1>标签墙后台管理</h1>
+        <p class="hero-copy">审核留言、隐藏不合适内容、更新心愿状态，把这面墙照顾得干净又有生命力。</p>
+      </div>
+      <a class="home-link" href="./index.html">返回标签墙</a>
+    </section>
+
+    <section class="login-panel" id="loginPanel">
+      <div>
+        <h2>管理入口</h2>
+        <p>请输入部署环境变量 <strong>ADMIN_TOKEN</strong> 对应的管理口令。</p>
+      </div>
+      <form class="login-form" id="loginForm">
+        <input id="adminToken" type="password" placeholder="管理口令" autocomplete="current-password" required>
+        <button type="submit">进入后台</button>
+      </form>
+    </section>
+
+    <section class="dashboard" id="dashboard" hidden>
+      <div class="toolbar">
+        <div class="stats-grid">
+          <article class="stat-card">
+            <span>全部留言</span>
+            <strong id="statTotal">0</strong>
+          </article>
+          <article class="stat-card">
+            <span>公开显示</span>
+            <strong id="statApproved">0</strong>
+          </article>
+          <article class="stat-card">
+            <span>已隐藏</span>
+            <strong id="statHidden">0</strong>
+          </article>
+          <article class="stat-card">
+            <span>已达成</span>
+            <strong id="statDone">0</strong>
+          </article>
+        </div>
+
+        <div class="filters">
+          <input id="searchInput" type="search" placeholder="搜索内容 / 昵称">
+          <select id="statusFilter" aria-label="筛选状态">
+            <option value="all">全部状态</option>
+            <option value="approved">公开显示</option>
+            <option value="hidden">已隐藏</option>
+            <option value="doing">进行中</option>
+            <option value="done">已达成</option>
+          </select>
+          <button id="refreshBtn" type="button">刷新</button>
+          <button class="quiet-btn" id="logoutBtn" type="button">退出</button>
+        </div>
+      </div>
+
+      <div class="admin-list" id="wishList" aria-live="polite"></div>
+      <div class="empty-state" id="emptyState" hidden>
+        <h2>没有匹配的留言</h2>
+        <p>换一个筛选条件试试，或者刷新一下后台数据。</p>
+      </div>
+    </section>
+  </main>
+
+  <template id="wishAdminTemplate">
+    <article class="admin-card">
+      <div class="card-main">
+        <div class="card-topline">
+          <span class="type-pill"></span>
+          <span class="visibility-pill"></span>
+          <time></time>
+        </div>
+        <textarea class="content-input" maxlength="200" aria-label="留言内容"></textarea>
+        <div class="meta-row">
+          <label>
+            昵称
+            <input class="nickname-input" maxlength="20">
+          </label>
+          <label>
+            分类
+            <select class="type-input">
+              <option value="love">Love</option>
+              <option value="wish">心愿</option>
+              <option value="feedback">反馈</option>
+            </select>
+          </label>
+          <label>
+            颜色
+            <select class="color-input">
+              <option value="green">绿色</option>
+              <option value="yellow">黄色</option>
+              <option value="purple">紫色</option>
+              <option value="pink">粉色</option>
+              <option value="blue">蓝色</option>
+              <option value="orange">橙色</option>
+            </select>
+          </label>
+          <label>
+            状态
+            <select class="status-input">
+              <option value="">无</option>
+              <option value="doing">进行中</option>
+              <option value="done">已达成</option>
+            </select>
+          </label>
+        </div>
+      </div>
+
+      <div class="card-extra">
+        <label>
+          达成备注
+          <textarea class="done-note-input" maxlength="300" placeholder="例如：已经帮你完成啦"></textarea>
+        </label>
+        <label>
+          达成图片 URL
+          <input class="done-image-input" placeholder="https://...">
+        </label>
+        <label>
+          AI 回复
+          <textarea class="ai-reply-input" maxlength="500" placeholder="给这条留言一段温柔回应"></textarea>
+        </label>
+      </div>
+
+      <div class="card-actions">
+        <button class="toggle-approve-btn" type="button"></button>
+        <button class="save-btn" type="button">保存修改</button>
+        <button class="delete-btn" type="button">删除</button>
+      </div>
+    </article>
+  </template>
+
+  <div class="toast" id="toast"></div>
+  <script src="./admin.js"></script>
+</body>
+</html>
