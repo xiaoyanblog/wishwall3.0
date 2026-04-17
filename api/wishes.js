@@ -100,24 +100,20 @@ async function supabaseRequest(path, options = {}) {
 }
 
 function fromDatabaseRow(row) {
+  const position = normalizePosition(row);
+
   return {
     id: row.id,
-    content: row.content,
-    nickname: row.nickname || "匿名",
-    type: row.type || "love",
-    color: row.color || "green",
-    status: row.status || "",
-    doneNote: row.done_note || "",
-    doneImage: row.done_image || "",
-    aiReply: row.ai_reply || "",
-    position: row.position_left == null || row.position_top == null
-      ? null
-      : {
-          left: Number(row.position_left),
-          top: Number(row.position_top),
-          rotate: Number(row.position_rotate || 0)
-        },
-    z: row.z_index || 200,
+    content: cleanText(row.content, 200),
+    nickname: cleanText(row.nickname || "匿名", 20) || "匿名",
+    type: ALLOWED_TYPES.has(row.type) ? row.type : "love",
+    color: ALLOWED_COLORS.has(row.color) ? row.color : "green",
+    status: ALLOWED_STATUS.has(row.status) ? row.status : "",
+    doneNote: cleanText(row.done_note, 300),
+    doneImage: cleanUrl(row.done_image, 500),
+    aiReply: cleanText(row.ai_reply, 500),
+    position,
+    z: normalizeNumber(row.z_index, 200),
     createdAt: row.created_at
   };
 }
@@ -128,6 +124,42 @@ function cleanText(value, maxLength) {
     .replace(/\s+/g, " ")
     .trim()
     .slice(0, maxLength);
+}
+
+function cleanUrl(value, maxLength) {
+  const text = String(value || "").trim().slice(0, maxLength);
+
+  if (!text) {
+    return "";
+  }
+
+  try {
+    const url = new URL(text);
+    return url.protocol === "https:" ? text : "";
+  } catch (error) {
+    return "";
+  }
+}
+
+function normalizePosition(row) {
+  if (row.position_left == null || row.position_top == null) {
+    return null;
+  }
+
+  const left = Number(row.position_left);
+  const top = Number(row.position_top);
+  const rotate = Number(row.position_rotate || 0);
+
+  if (![left, top, rotate].every(Number.isFinite)) {
+    return null;
+  }
+
+  return { left, top, rotate };
+}
+
+function normalizeNumber(value, fallback) {
+  const number = Number(value);
+  return Number.isFinite(number) ? number : fallback;
 }
 
 function readJson(req) {

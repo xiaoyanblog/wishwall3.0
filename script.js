@@ -75,8 +75,10 @@
       card.querySelector(".wish-card-date").textContent = formatDate(wish.createdAt);
 
       const image = card.querySelector(".wish-card-done-img");
-      if (wish.doneImage) {
-        image.src = wish.doneImage;
+      const imageUrl = safeImageUrl(wish.doneImage);
+      if (imageUrl) {
+        image.src = imageUrl;
+        image.referrerPolicy = "no-referrer";
         card.classList.add("has-image");
       }
 
@@ -313,6 +315,19 @@
 
   function clamp(value, min, max) {
     return Math.min(Math.max(value, min), max);
+  }
+
+  function safeImageUrl(value) {
+    if (!value) {
+      return "";
+    }
+
+    try {
+      const url = new URL(value, window.location.origin);
+      return url.origin === window.location.origin || url.protocol === "https:" ? url.href : "";
+    } catch (error) {
+      return "";
+    }
   }
 
   function toast(message) {
