@@ -23,6 +23,9 @@
   let selectedColor = "green";
   let currentTypeIndex = 0;
   let zCounter = 200;
+  let captchaWidgetId = null;
+  let captchaScriptLoading = null;
+  let captchaSubmitting = false;
   let securitySettings = {
     captchaEnabled: false,
     captchaSiteKey: "",
@@ -64,16 +67,11 @@
   }
 
   function renderSecurityControls() {
-    const captchaInput = document.getElementById("wishCaptchaToken");
     const hint = document.getElementById("wishSecurityHint");
     const hints = [];
 
-    captchaInput.hidden = !securitySettings.captchaEnabled;
-    captchaInput.required = Boolean(securitySettings.captchaEnabled);
-
     if (securitySettings.captchaEnabled) {
-      const siteKeyText = securitySettings.captchaSiteKey ? `Site Key：${securitySettings.captchaSiteKey}` : "";
-      hints.push([securitySettings.captchaHelp || "已开启验证码，请填写验证码 Token 后发布。", siteKeyText].filter(Boolean).join(" "));
+      hints.push(securitySettings.captchaHelp || "已开启验证码，点击发布后完成验证。");
     }
 
     if (securitySettings.dailyLimitEnabled) {
@@ -288,8 +286,10 @@
   function initSubmit() {
     const button = document.getElementById("wishSubmitBtn");
     const input = document.getElementById("wishContent");
+    const closeButton = document.getElementById("captchaCloseBtn");
 
-    button.addEventListener("click", submitWish);
+    button.addEventListener("click", () => submitWish());
+    closeButton.addEventListener("click", hideCaptchaDialog);
     input.addEventListener("keydown", (event) => {
       if (event.key === "Enter" && !event.shiftKey) {
         event.preventDefault();
@@ -298,11 +298,10 @@
     });
   }
 
-  async function submitWish() {
+  async function submitWish(captchaToken = "") {
     const button = document.getElementById("wishSubmitBtn");
     const contentInput = document.getElementById("wishContent");
     const nickInput = document.getElementById("wishNick");
-    const captchaInput = document.getElementById("wishCaptchaToken");
     const content = contentInput.value.trim();
 
     if (!content) {
@@ -310,11 +309,16 @@
       return;
     }
 
-    if (securitySettings.captchaEnabled && !captchaInput.value.trim()) {
-      toast("请填写验证码 Token");
+    if (securitySettings.captchaEnabled && !captchaToken) {
+      showCaptchaDialog();
       return;
     }
 
+    if (captchaSubmitting) {
+      return;
+    }
+
+    captchaSubmitting = true;
     button.disabled = true;
     button.textContent = "提交中...";
 
@@ -328,7 +332,7 @@
           content,
           nickname: nickInput.value.trim() || "匿名",
           status: types[currentTypeIndex].slug === "wish" ? "doing" : "",
-          captchaToken: captchaInput.value.trim()
+          captchaToken
         })
       });
       const data = await response.json();
@@ -338,17 +342,95 @@
       }
 
       contentInput.value = "";
-      captchaInput.value = "";
       updateCharCounter();
+      hideCaptchaDialog();
       toast("发布成功");
       await loadApprovedWishes();
     } catch (error) {
       console.error(error);
+      resetCaptchaWidget();
       toast(error.message || "提交失败，请稍后再试");
     } finally {
       button.disabled = false;
       button.textContent = "发布";
+      captchaSubmitting = false;
     }
+  }
+
+  async function showCaptchaDialog() {
+    if (!securitySettings.captchaSiteKey) {
+      toast("验证码未配置 Site Key");
+      return;
+    }
+
+    const dialog = document.getElementById("captchaDialog");
+    const hint = document.getElementById("captchaDialogHint");
+    hint.textContent = securitySettings.captchaHelp || "为了防止刷屏，请先完成验证。";
+    dialog.hidden = false;
+
+    try {
+      await loadHCaptcha();
+      renderHCaptcha();
+    } catch (error) {
+      console.error(error);
+      toast("验证码加载失败，请稍后再试");
+    }
+  }
+
+  function hideCaptchaDialog() {
+    const dialog = document.getElementById("captchaDialog");
+    dialog.hidden = true;
+    resetCaptchaWidget();
+  }
+
+  function resetCaptchaWidget() {
+    if (window.hcaptcha && captchaWidgetId !== null) {
+      window.hcaptcha.reset(captchaWidgetId);
+    }
+  }
+
+  function loadHCaptcha() {
+    if (window.hcaptcha) {
+      return Promise.resolve();
+    }
+
+    if (captchaScriptLoading) {
+      return captchaScriptLoading;
+    }
+
+    captchaScriptLoading = new Promise((resolve, reject) => {
+      const script = document.createElement("script");
+      script.src = "https://js.hcaptcha.com/1/api.js?render=explicit";
+      script.async = true;
+      script.defer = true;
+      script.onload = resolve;
+      script.onerror = reject;
+      document.head.appendChild(script);
+    });
+
+    return captchaScriptLoading;
+  }
+
+  function renderHCaptcha() {
+    const container = document.getElementById("captchaWidget");
+
+    if (captchaWidgetId !== null) {
+      window.hcaptcha.reset(captchaWidgetId);
+      return;
+    }
+
+    captchaWidgetId = window.hcaptcha.render(container, {
+      sitekey: securitySettings.captchaSiteKey,
+      callback: (token) => {
+        submitWish(token);
+      },
+      "expired-callback": () => {
+        toast("验证码已过期，请重新验证");
+      },
+      "error-callback": () => {
+        toast("验证码验证出错，请重试");
+      }
+    });
   }
 
   function typeLabel(slug) {

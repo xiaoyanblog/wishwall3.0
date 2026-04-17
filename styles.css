@@ -409,8 +409,7 @@ button {
 }
 
 .wish-input-nick,
-.wish-input-content,
-.wish-captcha-token {
+.wish-input-content {
   border: 1px solid rgba(42, 170, 188, 0.18);
   border-radius: var(--radius-md);
   outline: none;
@@ -432,15 +431,8 @@ button {
   padding: 8px 12px;
 }
 
-.wish-captcha-token {
-  width: 136px;
-  flex-shrink: 0;
-  padding: 8px 10px;
-}
-
 .wish-input-nick:focus,
-.wish-input-content:focus,
-.wish-captcha-token:focus {
+.wish-input-content:focus {
   border-color: var(--color-accent);
 }
 
@@ -545,6 +537,74 @@ button {
   transform: translateX(-50%) translateY(0);
 }
 
+.captcha-dialog {
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(248, 252, 253, 0.62);
+  backdrop-filter: blur(10px);
+}
+
+.captcha-dialog[hidden] {
+  display: none;
+}
+
+.captcha-card {
+  position: relative;
+  width: min(420px, 100%);
+  padding: 24px;
+  border: 1px solid var(--color-border);
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: 0 18px 58px rgba(39, 168, 186, 0.18), 0 8px 24px rgba(0, 0, 0, 0.08);
+  text-align: center;
+}
+
+.captcha-card .eyebrow {
+  margin: 0 0 8px;
+  color: var(--color-accent);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.captcha-card h2 {
+  margin: 0 0 10px;
+  color: var(--color-accent);
+  font-size: 24px;
+}
+
+.captcha-card p {
+  margin: 0 0 18px;
+  color: var(--color-text-muted);
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+.captcha-widget {
+  display: flex;
+  justify-content: center;
+  min-height: 78px;
+}
+
+.captcha-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 32px;
+  height: 32px;
+  border: 1px solid rgba(42, 170, 188, 0.22);
+  border-radius: 50%;
+  background: var(--color-bg-soft);
+  color: var(--color-text-muted);
+  font-size: 20px;
+  line-height: 1;
+}
+
 @media (max-width: 768px) {
   body {
     overflow: auto;
@@ -622,12 +682,6 @@ button {
   }
 
   .wish-input-content {
-    padding: 6px 8px;
-    font-size: 11px;
-  }
-
-  .wish-captcha-token {
-    width: 100%;
     padding: 6px 8px;
     font-size: 11px;
   }
