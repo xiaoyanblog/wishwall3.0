@@ -505,16 +505,6 @@ button {
   transform: translateY(-1px);
 }
 
-.wish-security-hint {
-  order: 20;
-  flex: 0 0 100%;
-  width: 100%;
-  margin: 2px 0 0;
-  color: var(--color-text-muted);
-  font-size: 11px;
-  text-align: center;
-}
-
 .wish-toast {
   position: fixed;
   z-index: 200;
@@ -583,6 +573,11 @@ button {
   color: var(--color-text-muted);
   font-size: 14px;
   line-height: 1.7;
+}
+
+.captcha-card .captcha-limit-hint {
+  margin-top: -8px;
+  font-size: 12px;
 }
 
 .captcha-widget {

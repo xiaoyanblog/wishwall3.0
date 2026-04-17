@@ -165,7 +165,7 @@ async function insertWish(payload) {
 
 async function loadSecuritySettings() {
   try {
-    const rows = await supabaseRequest("/rest/v1/security_settings?id=eq.1&select=record_ip,daily_limit_enabled,daily_limit_count,captcha_enabled,captcha_secret,captcha_verify_url&limit=1");
+    const rows = await supabaseRequest("/rest/v1/security_settings?id=eq.1&select=record_ip,daily_limit_enabled,daily_limit_count,captcha_enabled,captcha_site_key,captcha_secret,captcha_verify_url&limit=1");
     const row = rows && rows[0];
 
     if (!row) {
@@ -177,6 +177,7 @@ async function loadSecuritySettings() {
       dailyLimitEnabled: Boolean(row.daily_limit_enabled),
       dailyLimitCount: clampNumber(Number(row.daily_limit_count || 5), 1, 1000),
       captchaEnabled: Boolean(row.captcha_enabled),
+      captchaSiteKey: row.captcha_site_key || "",
       captchaSecret: row.captcha_secret || "",
       captchaVerifyUrl: row.captcha_verify_url || ""
     };
@@ -192,6 +193,7 @@ function defaultSecuritySettings() {
     dailyLimitEnabled: false,
     dailyLimitCount: 5,
     captchaEnabled: false,
+    captchaSiteKey: "",
     captchaSecret: "",
     captchaVerifyUrl: ""
   };
@@ -240,6 +242,9 @@ async function verifyCaptcha({ token, settings, ip }) {
     params.set("secret", settings.captchaSecret);
     params.set("response", token);
     params.set("remoteip", ip);
+    if (settings.captchaSiteKey) {
+      params.set("sitekey", settings.captchaSiteKey);
+    }
 
     const response = await fetch(settings.captchaVerifyUrl, {
       method: "POST",
@@ -247,6 +252,12 @@ async function verifyCaptcha({ token, settings, ip }) {
       body: params.toString()
     });
     const data = await response.json().catch(() => ({}));
+    if (!response.ok || !(data.success === true || data.ok === true)) {
+      console.error("Captcha verification failed", {
+        status: response.status,
+        errors: data["error-codes"] || data.errors || data.error || null
+      });
+    }
     return response.ok && (data.success === true || data.ok === true);
   } catch (error) {
     console.error(error);

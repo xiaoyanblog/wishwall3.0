@@ -67,19 +67,11 @@
   }
 
   function renderSecurityControls() {
-    const hint = document.getElementById("wishSecurityHint");
-    const hints = [];
-
-    if (securitySettings.captchaEnabled) {
-      hints.push(securitySettings.captchaHelp || "已开启验证码，点击发布后完成验证。");
-    }
-
-    if (securitySettings.dailyLimitEnabled) {
-      hints.push(`每个 IP 每日最多留言 ${securitySettings.dailyLimitCount} 次。`);
-    }
-
-    hint.textContent = hints.join(" ");
-    hint.hidden = hints.length === 0;
+    const limitHint = document.getElementById("captchaLimitHint");
+    limitHint.textContent = securitySettings.dailyLimitEnabled
+      ? `每个 IP 每日最多留言 ${securitySettings.dailyLimitCount} 次。`
+      : "";
+    limitHint.hidden = !securitySettings.dailyLimitEnabled;
   }
 
   async function loadApprovedWishes() {
