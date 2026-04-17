@@ -118,6 +118,12 @@ button {
   gap: 10px;
 }
 
+.sidebar-actions .home-link,
+.logout-btn {
+  width: 100%;
+  min-height: 44px;
+}
+
 .hero-panel {
   display: flex;
   align-items: flex-start;
@@ -172,6 +178,7 @@ h1 {
 }
 
 .home-link,
+.logout-btn,
 .login-form button,
 .filters button,
 .security-actions button,
@@ -196,13 +203,29 @@ h1 {
   box-shadow: 0 8px 22px rgba(39, 168, 186, 0.18);
 }
 
+.logout-btn {
+  border: 1px solid rgba(201, 75, 75, 0.24);
+  border-radius: 999px;
+  background: rgba(201, 75, 75, 0.08);
+  color: var(--danger);
+  font-weight: 800;
+  box-shadow: none;
+}
+
 .home-link:hover,
+.logout-btn:hover,
 .login-form button:hover,
 .filters button:hover,
 .security-actions button:hover,
 .card-actions button:hover {
   background: var(--accent-dark);
   transform: translateY(-1px);
+}
+
+.logout-btn:hover {
+  background: rgba(201, 75, 75, 0.14);
+  color: #a83b3b;
+  box-shadow: 0 8px 22px rgba(201, 75, 75, 0.12);
 }
 
 .login-panel {
@@ -525,23 +548,72 @@ label {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
-.setting-fields.wide .switch-row,
+.setting-fields.wide .switch-control,
 .setting-fields.wide label:last-child {
   grid-column: 1 / -1;
 }
 
-.switch-row {
-  display: flex;
+.switch-control {
+  --switch-w: 54px;
+  --switch-h: 30px;
+  display: inline-flex;
   align-items: center;
-  gap: 10px;
+  justify-content: flex-start;
+  gap: 12px;
   color: var(--ink);
   font-size: 14px;
+  cursor: pointer;
+  user-select: none;
 }
 
-.switch-row input {
-  width: 18px;
-  height: 18px;
-  accent-color: var(--accent);
+.switch-control input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.switch-track {
+  position: relative;
+  width: var(--switch-w);
+  height: var(--switch-h);
+  flex: 0 0 var(--switch-w);
+  border: 1px solid rgba(42, 170, 188, 0.2);
+  border-radius: 999px;
+  background: #e9f3f5;
+  box-shadow: inset 0 2px 6px rgba(63, 75, 81, 0.08);
+  transition: background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.switch-track::after {
+  content: "";
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 3px 10px rgba(63, 75, 81, 0.18);
+  transition: transform 0.22s ease;
+}
+
+.switch-control input:checked + .switch-track {
+  border-color: rgba(39, 168, 186, 0.56);
+  background: linear-gradient(135deg, var(--accent), #5ec9d7);
+  box-shadow: 0 8px 18px rgba(39, 168, 186, 0.18);
+}
+
+.switch-control input:checked + .switch-track::after {
+  transform: translateX(24px);
+}
+
+.switch-control input:focus-visible + .switch-track {
+  box-shadow: 0 0 0 4px rgba(39, 168, 186, 0.14);
+}
+
+.switch-text {
+  color: var(--ink);
+  font-weight: 800;
 }
 
 .security-actions {

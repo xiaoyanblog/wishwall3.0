@@ -59,9 +59,7 @@ module.exports = async function handler(req, res) {
 async function listWishes(req, res) {
   try {
     const limit = clampNumber(Number(req.query.limit || 200), 1, 500);
-    const rows = await supabaseRequest(
-      `/rest/v1/wishes?select=id,content,nickname,type,color,status,done_note,done_image,ai_reply,position_left,position_top,position_rotate,z_index,approved,ip_hash,ip_recorded,created_at&order=created_at.desc&limit=${limit}`
-    );
+    const rows = await listWishRows(limit);
 
     return res.status(200).json({
       wishes: rows.map(fromDatabaseRow)
@@ -69,6 +67,24 @@ async function listWishes(req, res) {
   } catch (error) {
     console.error(error);
     return res.status(500).json({ error: "读取后台数据失败" });
+  }
+}
+
+async function listWishRows(limit) {
+  const baseSelect = "id,content,nickname,type,color,status,done_note,done_image,ai_reply,position_left,position_top,position_rotate,z_index,approved,created_at";
+
+  try {
+    return await supabaseRequest(
+      `/rest/v1/wishes?select=${baseSelect},ip_hash,ip_recorded&order=created_at.desc&limit=${limit}`
+    );
+  } catch (error) {
+    if (!String(error.message || "").includes("ip_")) {
+      throw error;
+    }
+
+    return supabaseRequest(
+      `/rest/v1/wishes?select=${baseSelect}&order=created_at.desc&limit=${limit}`
+    );
   }
 }
 

@@ -63,7 +63,10 @@ async function submitWish(req, res) {
     }
 
     if (settings.dailyLimitEnabled) {
-      const used = await countTodaySubmissions(ipHash);
+      const used = await countTodaySubmissions(ipHash).catch((error) => {
+        console.error(error);
+        return 0;
+      });
 
       if (used >= settings.dailyLimitCount) {
         return res.status(429).json({ error: `今天留言次数已达上限：${settings.dailyLimitCount} 次` });
@@ -82,23 +85,30 @@ async function submitWish(req, res) {
       }
     }
 
+    const wishPayload = {
+      content,
+      nickname,
+      type,
+      color,
+      status,
+      approved: true
+    };
+
+    if (settings.recordIp) {
+      wishPayload.ip_hash = ipHash;
+      wishPayload.ip_recorded = true;
+    }
+
     await supabaseRequest("/rest/v1/wishes", {
       method: "POST",
       headers: { Prefer: "return=minimal" },
-      body: JSON.stringify({
-        content,
-        nickname,
-        type,
-        color,
-        status,
-        ip_hash: settings.recordIp ? ipHash : "",
-        ip_recorded: settings.recordIp,
-        approved: true
-      })
+      body: JSON.stringify(wishPayload)
     });
 
     if (settings.recordIp || settings.dailyLimitEnabled) {
-      await recordSubmission(ipHash);
+      await recordSubmission(ipHash).catch((error) => {
+        console.error(error);
+      });
     }
 
     return res.status(201).json({ ok: true, message: "发布成功" });

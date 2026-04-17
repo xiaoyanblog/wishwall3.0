@@ -20,7 +20,7 @@
       </nav>
       <div class="sidebar-actions">
         <a class="home-link" href="./index.html">返回标签墙</a>
-        <button class="quiet-btn" id="logoutBtn" type="button">退出后台</button>
+        <button class="logout-btn" id="logoutBtn" type="button">退出后台</button>
       </div>
     </aside>
 
@@ -81,9 +81,10 @@
               <h2>记录 IP</h2>
               <p>开启后，新留言会保存访问者 IP 的哈希值，不保存明文 IP。</p>
             </div>
-            <label class="switch-row">
+            <label class="switch-control">
               <input id="recordIp" type="checkbox">
-              <span>开启</span>
+              <span class="switch-track" aria-hidden="true"></span>
+              <span class="switch-text">记录 IP</span>
             </label>
           </article>
 
@@ -93,9 +94,10 @@
               <p>按 IP 哈希统计每日留言次数，适合防止刷屏。</p>
             </div>
             <div class="setting-fields">
-              <label class="switch-row">
+              <label class="switch-control">
                 <input id="dailyLimitEnabled" type="checkbox">
-                <span>开启每日限制</span>
+                <span class="switch-track" aria-hidden="true"></span>
+                <span class="switch-text">开启每日限制</span>
               </label>
               <label>
                 每个 IP 每日最多留言
@@ -110,9 +112,10 @@
               <p>可接入 Cloudflare Turnstile、hCaptcha、reCAPTCHA 等兼容 siteverify 的验证 API。</p>
             </div>
             <div class="setting-fields wide">
-              <label class="switch-row">
+              <label class="switch-control">
                 <input id="captchaEnabled" type="checkbox">
-                <span>开启验证码</span>
+                <span class="switch-track" aria-hidden="true"></span>
+                <span class="switch-text">开启验证码</span>
               </label>
               <label>
                 Site Key / 前台标识
