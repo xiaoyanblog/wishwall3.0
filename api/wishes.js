@@ -72,7 +72,7 @@ async function submitWish(req, res) {
 
     if (settings.captchaEnabled) {
       const verified = await verifyCaptcha({
-        token: cleanText(body.captchaToken, 1200),
+        token: cleanCaptchaToken(body.captchaToken),
         settings,
         ip
       });
@@ -216,7 +216,8 @@ async function verifyCaptcha({ token, settings, ip }) {
     if (!response.ok || !(data.success === true || data.ok === true)) {
       console.error("Captcha verification failed", {
         status: response.status,
-        errors: data["error-codes"] || data.errors || data.error || null
+        errors: data["error-codes"] || data.errors || data.error || null,
+        tokenLength: token.length
       });
     }
     return response.ok && (data.success === true || data.ok === true);
@@ -251,6 +252,10 @@ function cleanText(value, maxLength) {
     .replace(/\s+/g, " ")
     .trim()
     .slice(0, maxLength);
+}
+
+function cleanCaptchaToken(value) {
+  return String(value || "").trim().slice(0, 10000);
 }
 
 function cleanUrl(value, maxLength) {
@@ -344,7 +349,7 @@ function readJson(req) {
     let raw = "";
     req.on("data", (chunk) => {
       raw += chunk;
-      if (raw.length > 4096) {
+      if (raw.length > 16 * 1024) {
         reject(new Error("Payload too large"));
         req.destroy();
       }
