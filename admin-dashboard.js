@@ -2,6 +2,7 @@
   "use strict";
 
   const apiUrl = "/api/admin-wishes";
+  const securityApiUrl = "/api/security-settings";
   const loginUrl = "./admin.html";
   const tokenKey = "wishWallAdminToken";
   const typeLabels = {
@@ -25,8 +26,19 @@
       return;
     }
 
+    bindMenu();
     bindToolbar();
+    bindSecurityForm();
     loadWishes();
+    loadSecuritySettings();
+  }
+
+  function bindMenu() {
+    document.querySelectorAll(".sidebar-menu-btn").forEach((button) => {
+      button.addEventListener("click", () => {
+        showPanel(button.dataset.panel);
+      });
+    });
   }
 
   function bindToolbar() {
@@ -37,6 +49,37 @@
     });
     document.getElementById("searchInput").addEventListener("input", renderWishes);
     document.getElementById("statusFilter").addEventListener("change", renderWishes);
+  }
+
+  function bindSecurityForm() {
+    document.getElementById("securityForm").addEventListener("submit", async (event) => {
+      event.preventDefault();
+      await saveSecuritySettings();
+    });
+    document.getElementById("reloadSecurityBtn").addEventListener("click", loadSecuritySettings);
+  }
+
+  function showPanel(panelId) {
+    const panelText = {
+      wishesPanel: {
+        title: "留言管理",
+        desc: "审核留言、隐藏不合适内容、更新心愿状态，把这面墙照顾得干净又有生命力。"
+      },
+      securityPanel: {
+        title: "安全管理",
+        desc: "配置 IP 记录、每日留言限制和验证码，让公开墙面更稳、更少被刷屏。"
+      }
+    };
+
+    document.querySelectorAll(".sidebar-menu-btn").forEach((button) => {
+      button.classList.toggle("active", button.dataset.panel === panelId);
+    });
+    document.querySelectorAll(".admin-panel").forEach((panel) => {
+      panel.classList.toggle("active", panel.id === panelId);
+    });
+
+    document.getElementById("panelTitle").textContent = panelText[panelId].title;
+    document.getElementById("panelDesc").textContent = panelText[panelId].desc;
   }
 
   async function loadWishes() {
@@ -94,7 +137,8 @@
     visibility.textContent = wish.approved ? "公开显示" : "已隐藏";
     visibility.classList.toggle("hidden", !wish.approved);
 
-    card.querySelector("time").textContent = formatDate(wish.createdAt);
+    const ipText = wish.ipRecorded && wish.ipHash ? ` / IP ${wish.ipHash.slice(0, 10)}` : "";
+    card.querySelector("time").textContent = `${formatDate(wish.createdAt)}${ipText}`;
     card.querySelector(".content-input").value = wish.content || "";
     card.querySelector(".nickname-input").value = wish.nickname || "匿名";
     card.querySelector(".type-input").value = wish.type || "love";
@@ -163,6 +207,59 @@
       console.error(error);
       toast(error.message || "删除失败");
     }
+  }
+
+  async function loadSecuritySettings() {
+    try {
+      const data = await requestJson(securityApiUrl);
+      fillSecurityForm(data.settings || {});
+    } catch (error) {
+      console.error(error);
+      toast(error.message || "读取安全设置失败");
+    }
+  }
+
+  async function saveSecuritySettings() {
+    const button = document.getElementById("saveSecurityBtn");
+    const payload = {
+      recordIp: document.getElementById("recordIp").checked,
+      dailyLimitEnabled: document.getElementById("dailyLimitEnabled").checked,
+      dailyLimitCount: document.getElementById("dailyLimitCount").value,
+      captchaEnabled: document.getElementById("captchaEnabled").checked,
+      captchaSiteKey: document.getElementById("captchaSiteKey").value,
+      captchaSecret: document.getElementById("captchaSecret").value,
+      captchaVerifyUrl: document.getElementById("captchaVerifyUrl").value,
+      captchaHelp: document.getElementById("captchaHelp").value
+    };
+
+    button.disabled = true;
+    button.textContent = "保存中...";
+
+    try {
+      const data = await requestJson(securityApiUrl, {
+        method: "PATCH",
+        body: JSON.stringify(payload)
+      });
+      fillSecurityForm(data.settings || {});
+      toast("安全设置已保存");
+    } catch (error) {
+      console.error(error);
+      toast(error.message || "保存安全设置失败");
+    } finally {
+      button.disabled = false;
+      button.textContent = "保存安全设置";
+    }
+  }
+
+  function fillSecurityForm(settings) {
+    document.getElementById("recordIp").checked = Boolean(settings.recordIp);
+    document.getElementById("dailyLimitEnabled").checked = Boolean(settings.dailyLimitEnabled);
+    document.getElementById("dailyLimitCount").value = settings.dailyLimitCount || 5;
+    document.getElementById("captchaEnabled").checked = Boolean(settings.captchaEnabled);
+    document.getElementById("captchaSiteKey").value = settings.captchaSiteKey || "";
+    document.getElementById("captchaSecret").value = settings.captchaSecret || "";
+    document.getElementById("captchaVerifyUrl").value = settings.captchaVerifyUrl || "";
+    document.getElementById("captchaHelp").value = settings.captchaHelp || "";
   }
 
   function getFilteredWishes() {

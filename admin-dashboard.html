@@ -8,57 +8,138 @@
   <link rel="stylesheet" href="./admin.css">
 </head>
 <body>
-  <main class="admin-shell">
-    <section class="hero-panel">
-      <div>
+  <main class="admin-shell admin-layout">
+    <aside class="admin-sidebar">
+      <div class="sidebar-brand">
         <p class="eyebrow">Wish Wall 2.0</p>
-        <h1>标签墙后台管理</h1>
-        <p class="hero-copy">审核留言、隐藏不合适内容、更新心愿状态，把这面墙照顾得干净又有生命力。</p>
+        <strong>后台控制台</strong>
       </div>
-      <a class="home-link" href="./index.html">返回标签墙</a>
-    </section>
+      <nav class="sidebar-menu" aria-label="后台菜单">
+        <button class="sidebar-menu-btn active" type="button" data-panel="wishesPanel">留言管理</button>
+        <button class="sidebar-menu-btn" type="button" data-panel="securityPanel">安全管理</button>
+      </nav>
+      <div class="sidebar-actions">
+        <a class="home-link" href="./index.html">返回标签墙</a>
+        <button class="quiet-btn" id="logoutBtn" type="button">退出后台</button>
+      </div>
+    </aside>
 
-    <section class="dashboard" id="dashboard">
-      <div class="toolbar">
-        <div class="stats-grid">
-          <article class="stat-card">
-            <span>全部留言</span>
-            <strong id="statTotal">0</strong>
-          </article>
-          <article class="stat-card">
-            <span>公开显示</span>
-            <strong id="statApproved">0</strong>
-          </article>
-          <article class="stat-card">
-            <span>已隐藏</span>
-            <strong id="statHidden">0</strong>
-          </article>
-          <article class="stat-card">
-            <span>已达成</span>
-            <strong id="statDone">0</strong>
-          </article>
+    <div class="admin-content">
+      <section class="hero-panel">
+        <div>
+          <p class="eyebrow">Dashboard</p>
+          <h1 id="panelTitle">留言管理</h1>
+          <p class="hero-copy" id="panelDesc">审核留言、隐藏不合适内容、更新心愿状态，把这面墙照顾得干净又有生命力。</p>
+        </div>
+      </section>
+
+      <section class="dashboard admin-panel active" id="wishesPanel">
+        <div class="toolbar">
+          <div class="stats-grid">
+            <article class="stat-card">
+              <span>全部留言</span>
+              <strong id="statTotal">0</strong>
+            </article>
+            <article class="stat-card">
+              <span>公开显示</span>
+              <strong id="statApproved">0</strong>
+            </article>
+            <article class="stat-card">
+              <span>已隐藏</span>
+              <strong id="statHidden">0</strong>
+            </article>
+            <article class="stat-card">
+              <span>已达成</span>
+              <strong id="statDone">0</strong>
+            </article>
+          </div>
+
+          <div class="filters">
+            <input id="searchInput" type="search" placeholder="搜索内容 / 昵称">
+            <select id="statusFilter" aria-label="筛选状态">
+              <option value="all">全部状态</option>
+              <option value="approved">公开显示</option>
+              <option value="hidden">已隐藏</option>
+              <option value="doing">进行中</option>
+              <option value="done">已达成</option>
+            </select>
+            <button id="refreshBtn" type="button">刷新</button>
+          </div>
         </div>
 
-        <div class="filters">
-          <input id="searchInput" type="search" placeholder="搜索内容 / 昵称">
-          <select id="statusFilter" aria-label="筛选状态">
-            <option value="all">全部状态</option>
-            <option value="approved">公开显示</option>
-            <option value="hidden">已隐藏</option>
-            <option value="doing">进行中</option>
-            <option value="done">已达成</option>
-          </select>
-          <button id="refreshBtn" type="button">刷新</button>
-          <button class="quiet-btn" id="logoutBtn" type="button">退出</button>
+        <div class="admin-list" id="wishList" aria-live="polite"></div>
+        <div class="empty-state" id="emptyState" hidden>
+          <h2>没有匹配的留言</h2>
+          <p>换一个筛选条件试试，或者刷新一下后台数据。</p>
         </div>
-      </div>
+      </section>
 
-      <div class="admin-list" id="wishList" aria-live="polite"></div>
-      <div class="empty-state" id="emptyState" hidden>
-        <h2>没有匹配的留言</h2>
-        <p>换一个筛选条件试试，或者刷新一下后台数据。</p>
-      </div>
-    </section>
+      <section class="admin-panel security-panel" id="securityPanel">
+        <form class="security-form" id="securityForm">
+          <article class="setting-card">
+            <div>
+              <h2>记录 IP</h2>
+              <p>开启后，新留言会保存访问者 IP 的哈希值，不保存明文 IP。</p>
+            </div>
+            <label class="switch-row">
+              <input id="recordIp" type="checkbox">
+              <span>开启</span>
+            </label>
+          </article>
+
+          <article class="setting-card">
+            <div>
+              <h2>留言限制</h2>
+              <p>按 IP 哈希统计每日留言次数，适合防止刷屏。</p>
+            </div>
+            <div class="setting-fields">
+              <label class="switch-row">
+                <input id="dailyLimitEnabled" type="checkbox">
+                <span>开启每日限制</span>
+              </label>
+              <label>
+                每个 IP 每日最多留言
+                <input id="dailyLimitCount" type="number" min="1" max="1000" value="5">
+              </label>
+            </div>
+          </article>
+
+          <article class="setting-card">
+            <div>
+              <h2>验证码</h2>
+              <p>可接入 Cloudflare Turnstile、hCaptcha、reCAPTCHA 等兼容 siteverify 的验证 API。</p>
+            </div>
+            <div class="setting-fields wide">
+              <label class="switch-row">
+                <input id="captchaEnabled" type="checkbox">
+                <span>开启验证码</span>
+              </label>
+              <label>
+                Site Key / 前台标识
+                <input id="captchaSiteKey" placeholder="例如 0x4AAAA...">
+              </label>
+              <label>
+                Secret Key
+                <input id="captchaSecret" type="password" placeholder="验证码服务的 secret">
+              </label>
+              <label>
+                验证 API
+                <input id="captchaVerifyUrl" placeholder="https://challenges.cloudflare.com/turnstile/v0/siteverify">
+              </label>
+              <label>
+                前台提示文字
+                <input id="captchaHelp" placeholder="请完成验证码后填写 Token">
+              </label>
+            </div>
+          </article>
+
+          <div class="security-actions">
+            <button id="saveSecurityBtn" type="submit">保存安全设置</button>
+            <button class="quiet-btn" id="reloadSecurityBtn" type="button">重新读取</button>
+          </div>
+        </form>
+      </section>
+    </div>
   </main>
 
   <template id="wishAdminTemplate">

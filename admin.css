@@ -44,6 +44,17 @@ button {
   padding: 32px 0 56px;
 }
 
+.admin-layout {
+  display: grid;
+  grid-template-columns: 230px minmax(0, 1fr);
+  gap: 20px;
+  align-items: start;
+}
+
+.admin-content {
+  min-width: 0;
+}
+
 .gate-shell {
   min-height: 100vh;
   display: grid;
@@ -52,14 +63,59 @@ button {
 
 .hero-panel,
 .login-panel,
+.admin-sidebar,
 .toolbar,
 .admin-card,
-.empty-state {
+.empty-state,
+.setting-card {
   border: 1px solid var(--line);
   border-radius: 18px;
   background: var(--paper);
   box-shadow: var(--shadow);
   backdrop-filter: blur(14px);
+}
+
+.admin-sidebar {
+  position: sticky;
+  top: 24px;
+  padding: 18px;
+}
+
+.sidebar-brand strong {
+  display: block;
+  color: var(--accent);
+  font-size: 22px;
+  line-height: 1.2;
+}
+
+.sidebar-menu {
+  display: grid;
+  gap: 8px;
+  margin: 22px 0;
+}
+
+.sidebar-menu-btn {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid transparent;
+  border-radius: 14px;
+  background: transparent;
+  color: var(--muted);
+  font-weight: 700;
+  text-align: left;
+  transition: all 0.2s ease;
+}
+
+.sidebar-menu-btn:hover,
+.sidebar-menu-btn.active {
+  border-color: var(--line);
+  background: rgba(39, 168, 186, 0.1);
+  color: var(--accent);
+}
+
+.sidebar-actions {
+  display: grid;
+  gap: 10px;
 }
 
 .hero-panel {
@@ -118,6 +174,7 @@ h1 {
 .home-link,
 .login-form button,
 .filters button,
+.security-actions button,
 .card-actions button {
   position: relative;
   z-index: 1;
@@ -131,6 +188,9 @@ h1 {
 }
 
 .home-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   flex: 0 0 auto;
   padding: 12px 18px;
   box-shadow: 0 8px 22px rgba(39, 168, 186, 0.18);
@@ -139,6 +199,7 @@ h1 {
 .home-link:hover,
 .login-form button:hover,
 .filters button:hover,
+.security-actions button:hover,
 .card-actions button:hover {
   background: var(--accent-dark);
   transform: translateY(-1px);
@@ -190,6 +251,7 @@ h1 {
 .filters select,
 .meta-row input,
 .meta-row select,
+.setting-fields input,
 .card-extra input,
 .card-extra textarea,
 .content-input {
@@ -214,6 +276,7 @@ h1 {
 .filters select:focus,
 .meta-row input:focus,
 .meta-row select:focus,
+.setting-fields input:focus,
 .card-extra input:focus,
 .card-extra textarea:focus,
 .content-input:focus {
@@ -265,14 +328,22 @@ h1 {
 
 .filters {
   display: grid;
-  grid-template-columns: minmax(180px, 1fr) 150px auto auto;
+  grid-template-columns: minmax(180px, 1fr) 150px auto;
   gap: 10px;
   margin-top: 14px;
 }
 
-.filters .quiet-btn {
+.quiet-btn {
   background: rgba(36, 50, 53, 0.12);
   color: var(--ink);
+}
+
+.admin-panel {
+  display: none;
+}
+
+.admin-panel.active {
+  display: block;
 }
 
 .admin-list {
@@ -368,6 +439,7 @@ label {
 
 .meta-row input,
 .meta-row select,
+.setting-fields input,
 .card-extra input,
 .card-extra textarea {
   min-height: 40px;
@@ -417,6 +489,72 @@ label {
   text-align: center;
 }
 
+.security-panel {
+  margin-top: 22px;
+}
+
+.security-form {
+  display: grid;
+  gap: 16px;
+}
+
+.setting-card {
+  display: grid;
+  grid-template-columns: minmax(220px, 0.8fr) minmax(0, 1.2fr);
+  gap: 18px;
+  padding: 20px;
+}
+
+.setting-card h2 {
+  margin-bottom: 8px;
+  color: var(--accent);
+}
+
+.setting-card p {
+  margin-bottom: 0;
+  color: var(--muted);
+  line-height: 1.7;
+}
+
+.setting-fields {
+  display: grid;
+  gap: 12px;
+}
+
+.setting-fields.wide {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.setting-fields.wide .switch-row,
+.setting-fields.wide label:last-child {
+  grid-column: 1 / -1;
+}
+
+.switch-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--ink);
+  font-size: 14px;
+}
+
+.switch-row input {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--accent);
+}
+
+.security-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.security-actions button {
+  min-height: 44px;
+  padding: 0 18px;
+}
+
 .toast {
   position: fixed;
   left: 50%;
@@ -439,8 +577,22 @@ label {
 }
 
 @media (max-width: 940px) {
+  .admin-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-sidebar {
+    position: static;
+  }
+
+  .sidebar-menu,
+  .sidebar-actions {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .login-panel,
-  .admin-card {
+  .admin-card,
+  .setting-card {
     grid-template-columns: 1fr;
   }
 
@@ -473,14 +625,18 @@ label {
   }
 
   .stats-grid,
-  .meta-row {
+  .meta-row,
+  .setting-fields.wide {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
 @media (max-width: 460px) {
   .stats-grid,
-  .meta-row {
+  .meta-row,
+  .setting-fields.wide,
+  .sidebar-menu,
+  .sidebar-actions {
     grid-template-columns: 1fr;
   }
 }

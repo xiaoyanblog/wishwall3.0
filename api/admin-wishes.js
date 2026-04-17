@@ -60,7 +60,7 @@ async function listWishes(req, res) {
   try {
     const limit = clampNumber(Number(req.query.limit || 200), 1, 500);
     const rows = await supabaseRequest(
-      `/rest/v1/wishes?select=id,content,nickname,type,color,status,done_note,done_image,ai_reply,position_left,position_top,position_rotate,z_index,approved,created_at&order=created_at.desc&limit=${limit}`
+      `/rest/v1/wishes?select=id,content,nickname,type,color,status,done_note,done_image,ai_reply,position_left,position_top,position_rotate,z_index,approved,ip_hash,ip_recorded,created_at&order=created_at.desc&limit=${limit}`
     );
 
     return res.status(200).json({
@@ -211,6 +211,8 @@ function fromDatabaseRow(row) {
     doneImage: cleanUrl(row.done_image, 500),
     aiReply: cleanText(row.ai_reply, 500),
     approved: Boolean(row.approved),
+    ipHash: row.ip_recorded ? row.ip_hash || "" : "",
+    ipRecorded: Boolean(row.ip_recorded),
     position,
     z: normalizeNumber(row.z_index, 200),
     createdAt: row.created_at

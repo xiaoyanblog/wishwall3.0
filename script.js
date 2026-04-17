@@ -3,6 +3,7 @@
 
   const maxLen = 200;
   const apiUrl = "/api/wishes";
+  const securityApiUrl = "/api/security-settings?public=true";
   const types = [
     { slug: "love", displayName: "Love" },
     { slug: "wish", displayName: "心愿" },
@@ -22,6 +23,13 @@
   let selectedColor = "green";
   let currentTypeIndex = 0;
   let zCounter = 200;
+  let securitySettings = {
+    captchaEnabled: false,
+    captchaSiteKey: "",
+    captchaHelp: "",
+    dailyLimitEnabled: false,
+    dailyLimitCount: 5
+  };
 
   document.addEventListener("DOMContentLoaded", init);
 
@@ -31,7 +39,49 @@
     initTypeToggle();
     initCharCounter();
     initSubmit();
+    await loadSecuritySettings();
     await loadApprovedWishes();
+  }
+
+  async function loadSecuritySettings() {
+    try {
+      const response = await fetch(securityApiUrl, { headers: { Accept: "application/json" } });
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "读取安全设置失败");
+      }
+
+      securitySettings = {
+        ...securitySettings,
+        ...(data.settings || {})
+      };
+      renderSecurityControls();
+    } catch (error) {
+      console.error(error);
+      renderSecurityControls();
+    }
+  }
+
+  function renderSecurityControls() {
+    const captchaInput = document.getElementById("wishCaptchaToken");
+    const hint = document.getElementById("wishSecurityHint");
+    const hints = [];
+
+    captchaInput.hidden = !securitySettings.captchaEnabled;
+    captchaInput.required = Boolean(securitySettings.captchaEnabled);
+
+    if (securitySettings.captchaEnabled) {
+      const siteKeyText = securitySettings.captchaSiteKey ? `Site Key：${securitySettings.captchaSiteKey}` : "";
+      hints.push([securitySettings.captchaHelp || "已开启验证码，请填写验证码 Token 后发布。", siteKeyText].filter(Boolean).join(" "));
+    }
+
+    if (securitySettings.dailyLimitEnabled) {
+      hints.push(`每个 IP 每日最多留言 ${securitySettings.dailyLimitCount} 次。`);
+    }
+
+    hint.textContent = hints.join(" ");
+    hint.hidden = hints.length === 0;
   }
 
   async function loadApprovedWishes() {
@@ -252,10 +302,16 @@
     const button = document.getElementById("wishSubmitBtn");
     const contentInput = document.getElementById("wishContent");
     const nickInput = document.getElementById("wishNick");
+    const captchaInput = document.getElementById("wishCaptchaToken");
     const content = contentInput.value.trim();
 
     if (!content) {
       toast("写点什么吧");
+      return;
+    }
+
+    if (securitySettings.captchaEnabled && !captchaInput.value.trim()) {
+      toast("请填写验证码 Token");
       return;
     }
 
@@ -271,7 +327,8 @@
           color: selectedColor,
           content,
           nickname: nickInput.value.trim() || "匿名",
-          status: types[currentTypeIndex].slug === "wish" ? "doing" : ""
+          status: types[currentTypeIndex].slug === "wish" ? "doing" : "",
+          captchaToken: captchaInput.value.trim()
         })
       });
       const data = await response.json();
@@ -281,6 +338,7 @@
       }
 
       contentInput.value = "";
+      captchaInput.value = "";
       updateCharCounter();
       toast("发布成功");
       await loadApprovedWishes();

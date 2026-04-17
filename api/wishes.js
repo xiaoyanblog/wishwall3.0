@@ -1,3 +1,5 @@
+const crypto = require("crypto");
+
 const ALLOWED_TYPES = new Set(["love", "wish", "feedback"]);
 const ALLOWED_COLORS = new Set(["green", "yellow", "purple", "pink", "blue", "orange"]);
 const ALLOWED_STATUS = new Set(["", "doing", "done"]);
@@ -47,6 +49,9 @@ async function listApprovedWishes(res) {
 async function submitWish(req, res) {
   try {
     const body = await readJson(req);
+    const settings = await loadSecuritySettings();
+    const ip = getClientKey(req);
+    const ipHash = hashIp(ip);
     const content = cleanText(body.content, 200);
     const nickname = cleanText(body.nickname || "匿名", 20) || "匿名";
     const type = ALLOWED_TYPES.has(body.type) ? body.type : "love";
@@ -55,6 +60,26 @@ async function submitWish(req, res) {
 
     if (!content) {
       return res.status(400).json({ error: "写点什么吧" });
+    }
+
+    if (settings.dailyLimitEnabled) {
+      const used = await countTodaySubmissions(ipHash);
+
+      if (used >= settings.dailyLimitCount) {
+        return res.status(429).json({ error: `今天留言次数已达上限：${settings.dailyLimitCount} 次` });
+      }
+    }
+
+    if (settings.captchaEnabled) {
+      const verified = await verifyCaptcha({
+        token: cleanText(body.captchaToken, 1200),
+        settings,
+        ip
+      });
+
+      if (!verified) {
+        return res.status(400).json({ error: "验证码验证失败" });
+      }
     }
 
     await supabaseRequest("/rest/v1/wishes", {
@@ -66,9 +91,15 @@ async function submitWish(req, res) {
         type,
         color,
         status,
+        ip_hash: settings.recordIp ? ipHash : "",
+        ip_recorded: settings.recordIp,
         approved: true
       })
     });
+
+    if (settings.recordIp || settings.dailyLimitEnabled) {
+      await recordSubmission(ipHash);
+    }
 
     return res.status(201).json({ ok: true, message: "发布成功" });
   } catch (error) {
@@ -106,6 +137,80 @@ async function supabaseRequest(path, options = {}) {
 
   const text = await response.text();
   return text ? JSON.parse(text) : null;
+}
+
+async function loadSecuritySettings() {
+  try {
+    const rows = await supabaseRequest("/rest/v1/security_settings?id=eq.1&select=record_ip,daily_limit_enabled,daily_limit_count,captcha_enabled,captcha_secret,captcha_verify_url&limit=1");
+    const row = rows && rows[0];
+
+    if (!row) {
+      return defaultSecuritySettings();
+    }
+
+    return {
+      recordIp: Boolean(row.record_ip),
+      dailyLimitEnabled: Boolean(row.daily_limit_enabled),
+      dailyLimitCount: clampNumber(Number(row.daily_limit_count || 5), 1, 1000),
+      captchaEnabled: Boolean(row.captcha_enabled),
+      captchaSecret: row.captcha_secret || "",
+      captchaVerifyUrl: row.captcha_verify_url || ""
+    };
+  } catch (error) {
+    console.error(error);
+    return defaultSecuritySettings();
+  }
+}
+
+function defaultSecuritySettings() {
+  return {
+    recordIp: false,
+    dailyLimitEnabled: false,
+    dailyLimitCount: 5,
+    captchaEnabled: false,
+    captchaSecret: "",
+    captchaVerifyUrl: ""
+  };
+}
+
+async function countTodaySubmissions(ipHash) {
+  const today = new Date();
+  today.setUTCHours(0, 0, 0, 0);
+  const path = `/rest/v1/wish_submission_logs?ip_hash=eq.${encodeURIComponent(ipHash)}&created_at=gte.${encodeURIComponent(today.toISOString())}&select=id&limit=1000`;
+  const rows = await supabaseRequest(path);
+  return Array.isArray(rows) ? rows.length : 0;
+}
+
+async function recordSubmission(ipHash) {
+  await supabaseRequest("/rest/v1/wish_submission_logs", {
+    method: "POST",
+    headers: { Prefer: "return=minimal" },
+    body: JSON.stringify({ ip_hash: ipHash })
+  });
+}
+
+async function verifyCaptcha({ token, settings, ip }) {
+  if (!token || !settings.captchaSecret || !settings.captchaVerifyUrl) {
+    return false;
+  }
+
+  try {
+    const params = new URLSearchParams();
+    params.set("secret", settings.captchaSecret);
+    params.set("response", token);
+    params.set("remoteip", ip);
+
+    const response = await fetch(settings.captchaVerifyUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: params.toString()
+    });
+    const data = await response.json().catch(() => ({}));
+    return response.ok && (data.success === true || data.ok === true);
+  } catch (error) {
+    console.error(error);
+    return false;
+  }
 }
 
 function fromDatabaseRow(row) {
@@ -171,6 +276,11 @@ function normalizeNumber(value, fallback) {
   return Number.isFinite(number) ? number : fallback;
 }
 
+function hashIp(ip) {
+  const salt = process.env.IP_HASH_SALT || process.env.ADMIN_TOKEN || process.env.SUPABASE_SERVICE_ROLE_KEY || "wish-wall";
+  return crypto.createHash("sha256").update(`${salt}:${ip}`).digest("hex");
+}
+
 function rateLimit(bucket, key, maxAttempts, windowMs) {
   const now = Date.now();
   const entry = bucket.get(key) || { count: 0, resetAt: now + windowMs };
@@ -200,6 +310,13 @@ function getClientKey(req) {
 function isJsonRequest(req) {
   const contentType = String(req.headers["content-type"] || "").toLowerCase();
   return contentType.includes("application/json");
+}
+
+function clampNumber(value, min, max) {
+  if (!Number.isFinite(value)) {
+    return min;
+  }
+  return Math.min(Math.max(Math.floor(value), min), max);
 }
 
 function readJson(req) {

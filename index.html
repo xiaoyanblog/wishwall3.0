@@ -44,6 +44,7 @@
   <div class="wish-input-bar" id="wishInputBar">
     <input type="text" class="wish-input-nick" id="wishNick" placeholder="昵称" maxlength="20">
     <input type="text" class="wish-input-content" id="wishContent" placeholder="写下你想说的话..." maxlength="200">
+    <input type="text" class="wish-captcha-token" id="wishCaptchaToken" placeholder="验证码 Token" autocomplete="off" hidden>
     <span class="wish-char-counter" id="wishCharCounter">0/200</span>
     <div class="wish-colors" id="wishColorPicker" aria-label="颜色">
       <button class="wish-color-dot active" type="button" data-color="green" style="background:#c8e6c9" aria-label="绿色"></button>
@@ -55,6 +56,7 @@
     </div>
     <button class="wish-type-btn" id="wishTypeToggle" type="button">Love</button>
     <button class="wish-btn wish-btn-submit" id="wishSubmitBtn" type="button">发布</button>
+    <p class="wish-security-hint" id="wishSecurityHint" hidden></p>
   </div>
 
   <template id="wishCardTemplate">

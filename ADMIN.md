@@ -41,6 +41,9 @@ SUPABASE_SERVICE_ROLE_KEY=你的 service role key / secret key
 - 给已达成心愿添加备注和图片 URL。
 - 给留言添加 AI 回复文案。
 - 删除不需要保留的留言。
+- 在安全管理里开启 IP 哈希记录。
+- 在安全管理里设置每个 IP 每日最多留言次数。
+- 在安全管理里配置验证码 Site Key、Secret Key 和验证 API。
 
 ## 安全提醒
 
@@ -48,4 +51,6 @@ SUPABASE_SERVICE_ROLE_KEY=你的 service role key / secret key
 - 不要使用 Supabase 的 `service_role key` 作为后台口令。
 - 后台登录口令只保存在当前浏览器标签页会话里，关闭标签页后需要重新登录。
 - 后台口令建议使用 20 位以上随机字符串，混合大小写字母、数字和符号。
+- 如果开启 IP 相关功能，建议配置 `IP_HASH_SALT` 环境变量，并使用随机长字符串。
+- 更新到带安全管理的版本后，需要在 Supabase SQL Editor 重新执行最新 `database/schema.sql`。
 - 如果怀疑口令泄露，直接在 Vercel 修改 `ADMIN_TOKEN` 并重新部署。
