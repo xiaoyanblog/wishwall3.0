@@ -3,6 +3,7 @@
 
   const apiUrl = "/api/admin-wishes";
   const securityApiUrl = "/api/security-settings";
+  const notificationApiUrl = "/api/notification-settings";
   const loginUrl = "./admin.html";
   const tokenKey = "wishWallAdminToken";
   const typeLabels = {
@@ -17,6 +18,7 @@
   };
 
   let wishes = [];
+  let notificationLogs = [];
 
   document.addEventListener("DOMContentLoaded", init);
 
@@ -29,11 +31,20 @@
     bindMenu();
     bindToolbar();
     bindSecurityForm();
+    bindNotificationForm();
     loadWishes();
     loadSecuritySettings();
+    loadNotificationSettings();
   }
 
   function bindMenu() {
+    if (!panelText[panelId]) {
+      panelText[panelId] = {
+        title: "通知管理",
+        desc: "配置新留言邮件通知，查看每次通知是否已经送达。"
+      };
+    }
+
     document.querySelectorAll(".sidebar-menu-btn").forEach((button) => {
       button.addEventListener("click", () => {
         showPanel(button.dataset.panel);
@@ -57,6 +68,16 @@
       await saveSecuritySettings();
     });
     document.getElementById("reloadSecurityBtn").addEventListener("click", loadSecuritySettings);
+  }
+
+  function bindNotificationForm() {
+    document.getElementById("notificationForm").addEventListener("submit", async (event) => {
+      event.preventDefault();
+      await saveNotificationSettings();
+    });
+    document.getElementById("reloadNotificationBtn").addEventListener("click", loadNotificationSettings);
+    document.getElementById("testNotificationBtn").addEventListener("click", sendTestNotification);
+    document.getElementById("notificationProvider").addEventListener("change", updateProviderCards);
   }
 
   function showPanel(panelId) {
@@ -239,6 +260,7 @@
       dailyLimitEnabled: document.getElementById("dailyLimitEnabled").checked,
       dailyLimitCount: document.getElementById("dailyLimitCount").value,
       captchaEnabled: document.getElementById("captchaEnabled").checked,
+      adminCaptchaEnabled: document.getElementById("adminCaptchaEnabled").checked,
       captchaSiteKey: document.getElementById("captchaSiteKey").value,
       captchaSecret: document.getElementById("captchaSecret").value,
       captchaVerifyUrl: document.getElementById("captchaVerifyUrl").value,
@@ -269,10 +291,149 @@
     document.getElementById("dailyLimitEnabled").checked = Boolean(settings.dailyLimitEnabled);
     document.getElementById("dailyLimitCount").value = settings.dailyLimitCount || 5;
     document.getElementById("captchaEnabled").checked = Boolean(settings.captchaEnabled);
+    document.getElementById("adminCaptchaEnabled").checked = Boolean(settings.adminCaptchaEnabled);
     document.getElementById("captchaSiteKey").value = settings.captchaSiteKey || "";
     document.getElementById("captchaSecret").value = settings.captchaSecret || "";
     document.getElementById("captchaVerifyUrl").value = settings.captchaVerifyUrl || "";
     document.getElementById("captchaHelp").value = settings.captchaHelp || "";
+  }
+
+  async function loadNotificationSettings() {
+    try {
+      const data = await requestJson(notificationApiUrl);
+      fillNotificationForm(data.settings || {});
+      notificationLogs = data.logs || [];
+      renderNotificationLogs();
+    } catch (error) {
+      console.error(error);
+      toast(error.message || "读取通知设置失败");
+    }
+  }
+
+  async function saveNotificationSettings() {
+    const button = document.getElementById("saveNotificationBtn");
+    const payload = getNotificationPayload();
+
+    button.disabled = true;
+    button.textContent = "保存中...";
+
+    try {
+      const data = await requestJson(notificationApiUrl, {
+        method: "PATCH",
+        body: JSON.stringify(payload)
+      });
+      fillNotificationForm(data.settings || {});
+      toast("通知设置已保存");
+    } catch (error) {
+      console.error(error);
+      toast(error.message || "保存通知设置失败");
+    } finally {
+      button.disabled = false;
+      button.textContent = "保存通知设置";
+    }
+  }
+
+  async function sendTestNotification() {
+    const button = document.getElementById("testNotificationBtn");
+
+    button.disabled = true;
+    button.textContent = "发送中...";
+
+    try {
+      await saveNotificationSettings();
+      await requestJson(notificationApiUrl, {
+        method: "POST",
+        body: JSON.stringify({ action: "test" })
+      });
+      await loadNotificationSettings();
+      toast("测试邮件已发送");
+    } catch (error) {
+      console.error(error);
+      await loadNotificationSettings();
+      toast(error.message || "测试邮件发送失败");
+    } finally {
+      button.disabled = false;
+      button.textContent = "发送测试邮件";
+    }
+  }
+
+  function getNotificationPayload() {
+    return {
+      enabled: document.getElementById("notificationEnabled").checked,
+      provider: document.getElementById("notificationProvider").value,
+      recipientEmail: document.getElementById("notificationRecipientEmail").value,
+      senderEmail: document.getElementById("notificationSenderEmail").value,
+      senderName: document.getElementById("notificationSenderName").value,
+      subjectPrefix: document.getElementById("notificationSubjectPrefix").value,
+      brevoApiKey: document.getElementById("brevoApiKey").value,
+      smtpHost: document.getElementById("smtpHost").value,
+      smtpPort: document.getElementById("smtpPort").value,
+      smtpSecure: document.getElementById("smtpSecure").checked,
+      smtpUser: document.getElementById("smtpUser").value,
+      smtpPass: document.getElementById("smtpPass").value
+    };
+  }
+
+  function fillNotificationForm(settings) {
+    document.getElementById("notificationEnabled").checked = Boolean(settings.enabled);
+    document.getElementById("notificationProvider").value = settings.provider || "brevo";
+    document.getElementById("notificationRecipientEmail").value = settings.recipientEmail || "";
+    document.getElementById("notificationSenderEmail").value = settings.senderEmail || "";
+    document.getElementById("notificationSenderName").value = settings.senderName || "Wish Wall";
+    document.getElementById("notificationSubjectPrefix").value = settings.subjectPrefix || "New wish";
+    document.getElementById("brevoApiKey").value = settings.brevoApiKey || "";
+    document.getElementById("smtpHost").value = settings.smtpHost || "";
+    document.getElementById("smtpPort").value = settings.smtpPort || 587;
+    document.getElementById("smtpSecure").checked = Boolean(settings.smtpSecure);
+    document.getElementById("smtpUser").value = settings.smtpUser || "";
+    document.getElementById("smtpPass").value = settings.smtpPass || "";
+    updateProviderCards();
+  }
+
+  function updateProviderCards() {
+    const provider = document.getElementById("notificationProvider").value;
+    document.querySelectorAll("[data-provider-card]").forEach((card) => {
+      card.hidden = card.dataset.providerCard !== provider;
+    });
+  }
+
+  function renderNotificationLogs() {
+    const list = document.getElementById("notificationList");
+    const empty = document.getElementById("notificationEmptyState");
+    list.innerHTML = "";
+
+    notificationLogs.forEach((item) => {
+      const row = document.createElement("article");
+      row.className = "notification-item";
+      row.innerHTML = `
+        <div>
+          <span class="notification-status ${item.status || ""}">${notificationStatusText(item.status)}</span>
+          <strong>${escapeHtml(item.subject || "通知")}</strong>
+          <p>${escapeHtml(item.recipientEmail || "")}</p>
+          ${item.errorMessage ? `<p class="notification-error">${escapeHtml(item.errorMessage)}</p>` : ""}
+        </div>
+        <div class="notification-meta">
+          <span>${escapeHtml(item.provider || "")}</span>
+          <time>${formatDate(item.createdAt)}</time>
+        </div>
+      `;
+      list.appendChild(row);
+    });
+
+    empty.hidden = notificationLogs.length > 0;
+  }
+
+  function notificationStatusText(status) {
+    if (status === "sent") {
+      return "已发送";
+    }
+    if (status === "failed") {
+      return "发送失败";
+    }
+    if (status === "skipped") {
+      return "已跳过";
+    }
+    return status || "未知";
   }
 
   function getFilteredWishes() {
@@ -337,6 +498,15 @@
 
   function pad(value) {
     return String(value).padStart(2, "0");
+  }
+
+  function escapeHtml(value) {
+    return String(value || "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
   }
 
   function toast(message) {

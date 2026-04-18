@@ -52,6 +52,7 @@ async function getPublicSettings(res) {
     return res.status(200).json({
       settings: {
         captchaEnabled: settings.captchaEnabled,
+        adminCaptchaEnabled: settings.adminCaptchaEnabled,
         captchaSiteKey: settings.captchaSiteKey,
         captchaHelp: settings.captchaHelp,
         dailyLimitEnabled: settings.dailyLimitEnabled,
@@ -63,6 +64,7 @@ async function getPublicSettings(res) {
     return res.status(200).json({
       settings: {
         captchaEnabled: false,
+        adminCaptchaEnabled: false,
         captchaSiteKey: "",
         captchaHelp: "",
         dailyLimitEnabled: false,
@@ -89,6 +91,7 @@ async function updateSettings(req, res) {
       daily_limit_enabled: Boolean(body.dailyLimitEnabled),
       daily_limit_count: clampNumber(Number(body.dailyLimitCount || 5), 1, 1000),
       captcha_enabled: Boolean(body.captchaEnabled),
+      admin_captcha_enabled: Boolean(body.adminCaptchaEnabled),
       captcha_site_key: cleanText(body.captchaSiteKey, 300),
       captcha_secret: cleanText(body.captchaSecret, 500),
       captcha_verify_url: cleanUrl(body.captchaVerifyUrl, 500),
@@ -110,7 +113,7 @@ async function updateSettings(req, res) {
 }
 
 async function loadSettings() {
-  const rows = await supabaseRequest("/rest/v1/security_settings?id=eq.1&select=record_ip,daily_limit_enabled,daily_limit_count,captcha_enabled,captcha_site_key,captcha_secret,captcha_verify_url,captcha_help,updated_at&limit=1");
+  const rows = await supabaseRequest("/rest/v1/security_settings?id=eq.1&select=record_ip,daily_limit_enabled,daily_limit_count,captcha_enabled,admin_captcha_enabled,captcha_site_key,captcha_secret,captcha_verify_url,captcha_help,updated_at&limit=1");
   const row = rows && rows[0];
 
   if (!row) {
@@ -122,6 +125,7 @@ async function loadSettings() {
     dailyLimitEnabled: Boolean(row.daily_limit_enabled),
     dailyLimitCount: clampNumber(Number(row.daily_limit_count || 5), 1, 1000),
     captchaEnabled: Boolean(row.captcha_enabled),
+    adminCaptchaEnabled: Boolean(row.admin_captcha_enabled),
     captchaSiteKey: row.captcha_site_key || "",
     captchaSecret: row.captcha_secret || "",
     captchaVerifyUrl: row.captcha_verify_url || "",
@@ -136,6 +140,7 @@ function defaultSettings() {
     dailyLimitEnabled: false,
     dailyLimitCount: 5,
     captchaEnabled: false,
+    adminCaptchaEnabled: false,
     captchaSiteKey: "",
     captchaSecret: "",
     captchaVerifyUrl: "",

@@ -97,6 +97,8 @@
     const board = document.getElementById("wishBoard");
     const empty = document.getElementById("wishEmpty");
     const template = document.getElementById("wishCardTemplate");
+    const fragment = document.createDocumentFragment();
+    const cardsWithImages = [];
     board.querySelectorAll(".wish-card").forEach((card) => card.remove());
 
     wishes.forEach((wish, index) => {
@@ -117,21 +119,87 @@
       const image = card.querySelector(".wish-card-done-img");
       const imageUrl = safeImageUrl(wish.doneImage);
       if (imageUrl) {
-        image.src = imageUrl;
+        image.dataset.src = imageUrl;
         image.referrerPolicy = "no-referrer";
-        card.classList.add("has-image");
+        card.classList.add("has-image", "image-loading");
+        cardsWithImages.push(card);
       }
 
-      board.appendChild(card);
       placeCard(card, wish, index);
       initDrag(card, board);
       card.addEventListener("pointerdown", () => {
         card.style.zIndex = ++zCounter;
       });
+      fragment.appendChild(card);
     });
 
+    board.appendChild(fragment);
     filterCards();
     empty.style.display = wishes.length === 0 ? "flex" : "none";
+    loadImagesAfterTextPaint(cardsWithImages);
+  }
+
+  function loadImagesAfterTextPaint(cards) {
+    if (!cards.length) {
+      return;
+    }
+
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        if ("IntersectionObserver" in window) {
+          let loadIndex = 0;
+          const observer = new IntersectionObserver((entries) => {
+            entries.forEach((entry) => {
+              if (!entry.isIntersecting) {
+                return;
+              }
+
+              observer.unobserve(entry.target);
+              scheduleImageLoad(entry.target, loadIndex);
+              loadIndex += 1;
+            });
+          }, { rootMargin: "240px" });
+
+          cards.forEach((card) => observer.observe(card));
+          return;
+        }
+
+        cards.forEach(scheduleImageLoad);
+      });
+    });
+  }
+
+  function scheduleImageLoad(card, index) {
+    window.setTimeout(() => loadCardImage(card), Math.min(index * 70, 1200));
+  }
+
+  function loadCardImage(card) {
+    if (!card.isConnected) {
+      return;
+    }
+
+    const image = card.querySelector(".wish-card-done-img");
+    const imageUrl = image ? image.dataset.src : "";
+
+    if (!imageUrl || image.dataset.loadingStarted) {
+      return;
+    }
+
+    image.dataset.loadingStarted = "true";
+    image.onload = () => {
+      card.classList.remove("image-loading");
+      card.classList.add("image-loaded");
+    };
+    image.onerror = () => {
+      card.classList.remove("image-loading");
+      card.classList.add("image-error");
+    };
+
+    if ("fetchPriority" in image) {
+      image.fetchPriority = "low";
+    }
+
+    image.src = imageUrl;
   }
 
   function placeCard(card, wish, index) {

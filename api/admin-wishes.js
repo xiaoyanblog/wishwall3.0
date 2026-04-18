@@ -13,6 +13,22 @@ module.exports = async function handler(req, res) {
   }
 
   try {
+    if (req.method === "GET" && req.query.verify === "true") {
+      const settings = await loadSecuritySettings();
+
+      if (settings.adminCaptchaEnabled) {
+        const verified = await verifyCaptcha({
+          token: cleanCaptchaToken(req.headers["x-admin-captcha-token"] || req.query.captchaToken),
+          settings,
+          ip: cleanIp(getClientKey(req))
+        });
+
+        if (!verified) {
+          return res.status(400).json({ error: "验证码验证失败" });
+        }
+      }
+    }
+
     if (!isAuthorized(req)) {
       if (!rateLimit(authFailures, getClientKey(req), 12, 5 * 60 * 1000)) {
         return res.status(429).json({ error: "尝试太频繁了，请稍后再试" });
@@ -197,6 +213,65 @@ async function supabaseRequest(path, options = {}) {
   return text ? JSON.parse(text) : null;
 }
 
+async function loadSecuritySettings() {
+  const rows = await supabaseRequest("/rest/v1/security_settings?id=eq.1&select=admin_captcha_enabled,captcha_site_key,captcha_secret,captcha_verify_url&limit=1");
+  const row = rows && rows[0];
+
+  if (!row) {
+    return defaultSecuritySettings();
+  }
+
+  return {
+    adminCaptchaEnabled: Boolean(row.admin_captcha_enabled),
+    captchaSiteKey: row.captcha_site_key || "",
+    captchaSecret: row.captcha_secret || "",
+    captchaVerifyUrl: row.captcha_verify_url || ""
+  };
+}
+
+function defaultSecuritySettings() {
+  return {
+    adminCaptchaEnabled: false,
+    captchaSiteKey: "",
+    captchaSecret: "",
+    captchaVerifyUrl: ""
+  };
+}
+
+async function verifyCaptcha({ token, settings, ip }) {
+  if (!token || !settings.captchaSecret || !settings.captchaVerifyUrl) {
+    return false;
+  }
+
+  try {
+    const params = new URLSearchParams();
+    params.set("secret", settings.captchaSecret);
+    params.set("response", token);
+    params.set("remoteip", ip);
+    if (settings.captchaSiteKey) {
+      params.set("sitekey", settings.captchaSiteKey);
+    }
+
+    const response = await fetch(settings.captchaVerifyUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: params.toString()
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok || !(data.success === true || data.ok === true)) {
+      console.error("Admin captcha verification failed", {
+        status: response.status,
+        errors: data["error-codes"] || data.errors || data.error || null,
+        tokenLength: token.length
+      });
+    }
+    return response.ok && (data.success === true || data.ok === true);
+  } catch (error) {
+    console.error(error);
+    return false;
+  }
+}
+
 function fromDatabaseRow(row) {
   const position = normalizePosition(row);
 
@@ -243,6 +318,10 @@ function cleanText(value, maxLength) {
     .replace(/\s+/g, " ")
     .trim()
     .slice(0, maxLength);
+}
+
+function cleanCaptchaToken(value) {
+  return String(value || "").trim().slice(0, 10000);
 }
 
 function cleanUrl(value, maxLength) {

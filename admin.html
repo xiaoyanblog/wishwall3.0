@@ -28,6 +28,10 @@
         <input id="adminToken" type="password" placeholder="管理口令" autocomplete="current-password" required>
         <button id="loginButton" type="submit">进入后台</button>
       </form>
+      <div class="login-captcha" id="loginCaptcha" hidden>
+        <p id="loginCaptchaHint">请先完成验证码</p>
+        <div class="captcha-widget" id="loginCaptchaWidget"></div>
+      </div>
     </section>
   </main>
 

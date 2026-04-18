@@ -17,6 +17,7 @@
       <nav class="sidebar-menu" aria-label="后台菜单">
         <button class="sidebar-menu-btn active" type="button" data-panel="wishesPanel">留言管理</button>
         <button class="sidebar-menu-btn" type="button" data-panel="securityPanel">安全管理</button>
+        <button class="sidebar-menu-btn" type="button" data-panel="notificationPanel">通知管理</button>
       </nav>
       <div class="sidebar-actions">
         <a class="home-link" href="./index.html">返回标签墙</a>
@@ -117,6 +118,11 @@
                 <span class="switch-track" aria-hidden="true"></span>
                 <span class="switch-text">开启验证码</span>
               </label>
+              <label class="switch-control">
+                <input id="adminCaptchaEnabled" type="checkbox">
+                <span class="switch-track" aria-hidden="true"></span>
+                <span class="switch-text">管理员登录开启验证码</span>
+              </label>
               <label>
                 Site Key / 前台标识
                 <input id="captchaSiteKey" placeholder="例如 0x4AAAA...">
@@ -141,6 +147,119 @@
             <button class="quiet-btn" id="reloadSecurityBtn" type="button">重新读取</button>
           </div>
         </form>
+      </section>
+
+      <section class="admin-panel notification-panel" id="notificationPanel">
+        <form class="security-form" id="notificationForm">
+          <article class="setting-card">
+            <div>
+              <h2>邮件通知</h2>
+              <p>开启后，每当有人发布新留言，就会把留言内容发送到指定邮箱，并在下方收件箱记录发送结果。</p>
+            </div>
+            <div class="setting-fields">
+              <label class="switch-control">
+                <input id="notificationEnabled" type="checkbox">
+                <span class="switch-track" aria-hidden="true"></span>
+                <span class="switch-text">开启新留言邮件通知</span>
+              </label>
+              <label>
+                发信方式
+                <select id="notificationProvider">
+                  <option value="brevo">Brevo API</option>
+                  <option value="smtp">传统 SMTP</option>
+                </select>
+              </label>
+            </div>
+          </article>
+
+          <article class="setting-card">
+            <div>
+              <h2>邮箱信息</h2>
+              <p>发件邮箱需要是 SMTP 服务或 Brevo 中已允许发信的邮箱；收件邮箱就是接收新留言通知的目标地址。</p>
+            </div>
+            <div class="setting-fields wide">
+              <label>
+                收件邮箱
+                <input id="notificationRecipientEmail" type="email" placeholder="admin@example.com">
+              </label>
+              <label>
+                发件邮箱
+                <input id="notificationSenderEmail" type="email" placeholder="noreply@example.com">
+              </label>
+              <label>
+                发件人名称
+                <input id="notificationSenderName" placeholder="Wish Wall">
+              </label>
+              <label>
+                邮件标题前缀
+                <input id="notificationSubjectPrefix" placeholder="New wish">
+              </label>
+            </div>
+          </article>
+
+          <article class="setting-card provider-card" data-provider-card="brevo">
+            <div>
+              <h2>Brevo API</h2>
+              <p>使用 Brevo Transactional Email API 发信。API Key 只会保存在服务端数据库，不会暴露给前台页面。</p>
+            </div>
+            <div class="setting-fields">
+              <label>
+                Brevo API Key
+                <input id="brevoApiKey" type="password" placeholder="xkeysib-...">
+              </label>
+            </div>
+          </article>
+
+          <article class="setting-card provider-card" data-provider-card="smtp">
+            <div>
+              <h2>传统 SMTP</h2>
+              <p>适合使用自己的邮箱服务商。587 通常使用 STARTTLS；465 通常开启 SSL/TLS。</p>
+            </div>
+            <div class="setting-fields wide">
+              <label>
+                SMTP 主机
+                <input id="smtpHost" placeholder="smtp.example.com">
+              </label>
+              <label>
+                SMTP 端口
+                <input id="smtpPort" type="number" min="1" max="65535" value="587">
+              </label>
+              <label class="switch-control">
+                <input id="smtpSecure" type="checkbox">
+                <span class="switch-track" aria-hidden="true"></span>
+                <span class="switch-text">使用 SSL/TLS</span>
+              </label>
+              <label>
+                SMTP 账号
+                <input id="smtpUser" autocomplete="off">
+              </label>
+              <label>
+                SMTP 密码 / 授权码
+                <input id="smtpPass" type="password" autocomplete="new-password">
+              </label>
+            </div>
+          </article>
+
+          <div class="security-actions">
+            <button id="saveNotificationBtn" type="submit">保存通知设置</button>
+            <button class="quiet-btn" id="testNotificationBtn" type="button">发送测试邮件</button>
+            <button class="quiet-btn" id="reloadNotificationBtn" type="button">刷新收件箱</button>
+          </div>
+        </form>
+
+        <section class="notification-inbox">
+          <div class="inbox-heading">
+            <div>
+              <h2>通知收件箱</h2>
+              <p>这里记录每次新留言通知和测试邮件的发送状态。</p>
+            </div>
+          </div>
+          <div class="notification-list" id="notificationList" aria-live="polite"></div>
+          <div class="empty-state" id="notificationEmptyState" hidden>
+            <h2>还没有通知记录</h2>
+            <p>保存配置后发送一封测试邮件，或者等下一条新留言到来。</p>
+          </div>
+        </section>
       </section>
     </div>
   </main>
