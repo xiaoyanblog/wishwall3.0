@@ -16,6 +16,20 @@
     doing: "进行中",
     done: "已达成"
   };
+  const panelText = {
+    wishesPanel: {
+      title: "留言管理",
+      desc: "审核留言、隐藏不合适内容、更新心愿状态，把这面墙照顾得干净又有生命力。"
+    },
+    securityPanel: {
+      title: "安全管理",
+      desc: "配置 IP 记录、每日留言限制和验证码，让公开墙面更稳、更少被刷屏。"
+    },
+    notificationPanel: {
+      title: "通知管理",
+      desc: "配置新留言邮件通知，查看每次通知是否已经送达。"
+    }
+  };
 
   let wishes = [];
   let notificationLogs = [];
@@ -38,13 +52,6 @@
   }
 
   function bindMenu() {
-    if (!panelText[panelId]) {
-      panelText[panelId] = {
-        title: "通知管理",
-        desc: "配置新留言邮件通知，查看每次通知是否已经送达。"
-      };
-    }
-
     document.querySelectorAll(".sidebar-menu-btn").forEach((button) => {
       button.addEventListener("click", () => {
         showPanel(button.dataset.panel);
@@ -53,44 +60,52 @@
   }
 
   function bindToolbar() {
-    document.getElementById("refreshBtn").addEventListener("click", loadWishes);
-    document.getElementById("logoutBtn").addEventListener("click", () => {
+    on("refreshBtn", "click", loadWishes);
+    on("logoutBtn", "click", () => {
       sessionStorage.removeItem(tokenKey);
       redirectToLogin();
     });
-    document.getElementById("searchInput").addEventListener("input", renderWishes);
-    document.getElementById("statusFilter").addEventListener("change", renderWishes);
+    on("searchInput", "input", renderWishes);
+    on("statusFilter", "change", renderWishes);
   }
 
   function bindSecurityForm() {
-    document.getElementById("securityForm").addEventListener("submit", async (event) => {
+    const form = document.getElementById("securityForm");
+    if (!form) {
+      return;
+    }
+
+    form.addEventListener("submit", async (event) => {
       event.preventDefault();
       await saveSecuritySettings();
     });
-    document.getElementById("reloadSecurityBtn").addEventListener("click", loadSecuritySettings);
+    on("reloadSecurityBtn", "click", loadSecuritySettings);
   }
 
   function bindNotificationForm() {
-    document.getElementById("notificationForm").addEventListener("submit", async (event) => {
+    const form = document.getElementById("notificationForm");
+    if (!form) {
+      return;
+    }
+
+    form.addEventListener("submit", async (event) => {
       event.preventDefault();
       await saveNotificationSettings();
     });
-    document.getElementById("reloadNotificationBtn").addEventListener("click", loadNotificationSettings);
-    document.getElementById("testNotificationBtn").addEventListener("click", sendTestNotification);
-    document.getElementById("notificationProvider").addEventListener("change", updateProviderCards);
+    on("reloadNotificationBtn", "click", loadNotificationSettings);
+    on("testNotificationBtn", "click", sendTestNotification);
+    on("notificationProvider", "change", updateProviderCards);
+  }
+
+  function on(id, eventName, handler) {
+    const element = document.getElementById(id);
+    if (element) {
+      element.addEventListener(eventName, handler);
+    }
   }
 
   function showPanel(panelId) {
-    const panelText = {
-      wishesPanel: {
-        title: "留言管理",
-        desc: "审核留言、隐藏不合适内容、更新心愿状态，把这面墙照顾得干净又有生命力。"
-      },
-      securityPanel: {
-        title: "安全管理",
-        desc: "配置 IP 记录、每日留言限制和验证码，让公开墙面更稳、更少被刷屏。"
-      }
-    };
+    const text = panelText[panelId] || panelText.wishesPanel;
 
     document.querySelectorAll(".sidebar-menu-btn").forEach((button) => {
       button.classList.toggle("active", button.dataset.panel === panelId);
@@ -99,8 +114,8 @@
       panel.classList.toggle("active", panel.id === panelId);
     });
 
-    document.getElementById("panelTitle").textContent = panelText[panelId].title;
-    document.getElementById("panelDesc").textContent = panelText[panelId].desc;
+    document.getElementById("panelTitle").textContent = text.title;
+    document.getElementById("panelDesc").textContent = text.desc;
   }
 
   async function loadWishes() {
@@ -128,10 +143,10 @@
     const approved = wishes.filter((wish) => wish.approved).length;
     const done = wishes.filter((wish) => wish.status === "done").length;
 
-    document.getElementById("statTotal").textContent = total;
-    document.getElementById("statApproved").textContent = approved;
-    document.getElementById("statHidden").textContent = total - approved;
-    document.getElementById("statDone").textContent = done;
+    setText("statTotal", total);
+    setText("statApproved", approved);
+    setText("statHidden", total - approved);
+    setText("statDone", done);
   }
 
   function renderWishes() {
@@ -287,15 +302,15 @@
   }
 
   function fillSecurityForm(settings) {
-    document.getElementById("recordIp").checked = Boolean(settings.recordIp);
-    document.getElementById("dailyLimitEnabled").checked = Boolean(settings.dailyLimitEnabled);
-    document.getElementById("dailyLimitCount").value = settings.dailyLimitCount || 5;
-    document.getElementById("captchaEnabled").checked = Boolean(settings.captchaEnabled);
-    document.getElementById("adminCaptchaEnabled").checked = Boolean(settings.adminCaptchaEnabled);
-    document.getElementById("captchaSiteKey").value = settings.captchaSiteKey || "";
-    document.getElementById("captchaSecret").value = settings.captchaSecret || "";
-    document.getElementById("captchaVerifyUrl").value = settings.captchaVerifyUrl || "";
-    document.getElementById("captchaHelp").value = settings.captchaHelp || "";
+    setChecked("recordIp", settings.recordIp);
+    setChecked("dailyLimitEnabled", settings.dailyLimitEnabled);
+    setValue("dailyLimitCount", settings.dailyLimitCount || 5);
+    setChecked("captchaEnabled", settings.captchaEnabled);
+    setChecked("adminCaptchaEnabled", settings.adminCaptchaEnabled);
+    setValue("captchaSiteKey", settings.captchaSiteKey || "");
+    setValue("captchaSecret", settings.captchaSecret || "");
+    setValue("captchaVerifyUrl", settings.captchaVerifyUrl || "");
+    setValue("captchaHelp", settings.captchaHelp || "");
   }
 
   async function loadNotificationSettings() {
@@ -375,23 +390,23 @@
   }
 
   function fillNotificationForm(settings) {
-    document.getElementById("notificationEnabled").checked = Boolean(settings.enabled);
-    document.getElementById("notificationProvider").value = settings.provider || "brevo";
-    document.getElementById("notificationRecipientEmail").value = settings.recipientEmail || "";
-    document.getElementById("notificationSenderEmail").value = settings.senderEmail || "";
-    document.getElementById("notificationSenderName").value = settings.senderName || "Wish Wall";
-    document.getElementById("notificationSubjectPrefix").value = settings.subjectPrefix || "New wish";
-    document.getElementById("brevoApiKey").value = settings.brevoApiKey || "";
-    document.getElementById("smtpHost").value = settings.smtpHost || "";
-    document.getElementById("smtpPort").value = settings.smtpPort || 587;
-    document.getElementById("smtpSecure").checked = Boolean(settings.smtpSecure);
-    document.getElementById("smtpUser").value = settings.smtpUser || "";
-    document.getElementById("smtpPass").value = settings.smtpPass || "";
+    setChecked("notificationEnabled", settings.enabled);
+    setValue("notificationProvider", settings.provider || "brevo");
+    setValue("notificationRecipientEmail", settings.recipientEmail || "");
+    setValue("notificationSenderEmail", settings.senderEmail || "");
+    setValue("notificationSenderName", settings.senderName || "Wish Wall");
+    setValue("notificationSubjectPrefix", settings.subjectPrefix || "New wish");
+    setValue("brevoApiKey", settings.brevoApiKey || "");
+    setValue("smtpHost", settings.smtpHost || "");
+    setValue("smtpPort", settings.smtpPort || 587);
+    setChecked("smtpSecure", settings.smtpSecure);
+    setValue("smtpUser", settings.smtpUser || "");
+    setValue("smtpPass", settings.smtpPass || "");
     updateProviderCards();
   }
 
   function updateProviderCards() {
-    const provider = document.getElementById("notificationProvider").value;
+    const provider = document.getElementById("notificationProvider")?.value || "brevo";
     document.querySelectorAll("[data-provider-card]").forEach((card) => {
       card.hidden = card.dataset.providerCard !== provider;
     });
@@ -400,14 +415,18 @@
   function renderNotificationLogs() {
     const list = document.getElementById("notificationList");
     const empty = document.getElementById("notificationEmptyState");
-    list.innerHTML = "";
 
+    if (!list || !empty) {
+      return;
+    }
+
+    list.innerHTML = "";
     notificationLogs.forEach((item) => {
       const row = document.createElement("article");
       row.className = "notification-item";
       row.innerHTML = `
         <div>
-          <span class="notification-status ${item.status || ""}">${notificationStatusText(item.status)}</span>
+          <span class="notification-status ${escapeHtml(item.status || "")}">${notificationStatusText(item.status)}</span>
           <strong>${escapeHtml(item.subject || "通知")}</strong>
           <p>${escapeHtml(item.recipientEmail || "")}</p>
           ${item.errorMessage ? `<p class="notification-error">${escapeHtml(item.errorMessage)}</p>` : ""}
@@ -437,8 +456,8 @@
   }
 
   function getFilteredWishes() {
-    const keyword = document.getElementById("searchInput").value.trim().toLowerCase();
-    const status = document.getElementById("statusFilter").value;
+    const keyword = (document.getElementById("searchInput")?.value || "").trim().toLowerCase();
+    const status = document.getElementById("statusFilter")?.value || "all";
 
     return wishes.filter((wish) => {
       const matchedKeyword = !keyword
@@ -484,6 +503,27 @@
 
   function getToken() {
     return sessionStorage.getItem(tokenKey) || "";
+  }
+
+  function setText(id, value) {
+    const element = document.getElementById(id);
+    if (element) {
+      element.textContent = value;
+    }
+  }
+
+  function setValue(id, value) {
+    const element = document.getElementById(id);
+    if (element) {
+      element.value = value;
+    }
+  }
+
+  function setChecked(id, value) {
+    const element = document.getElementById(id);
+    if (element) {
+      element.checked = Boolean(value);
+    }
   }
 
   function formatDate(dateText) {
