@@ -451,7 +451,8 @@ button {
 }
 
 .wish-input-nick,
-.wish-input-content {
+.wish-input-content,
+.wish-input-image {
   border: 1px solid rgba(42, 170, 188, 0.18);
   border-radius: var(--radius-md);
   outline: none;
@@ -474,8 +475,62 @@ button {
 }
 
 .wish-input-nick:focus,
-.wish-input-content:focus {
+.wish-input-content:focus,
+.wish-input-image:focus {
   border-color: var(--color-accent);
+}
+
+.wish-input-image {
+  flex: 1 1 180px;
+  min-width: 160px;
+  padding: 8px 12px;
+  font-size: 13px;
+}
+
+.wish-input-image[hidden] {
+  display: none;
+}
+
+.wish-image-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  flex-shrink: 0;
+  min-height: 32px;
+  padding: 5px 10px;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: var(--color-bg-soft);
+  color: var(--color-text-muted);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  user-select: none;
+}
+
+.wish-image-toggle input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.wish-image-toggle span {
+  display: grid;
+  place-items: center;
+  width: 16px;
+  height: 16px;
+  border: 1px solid rgba(42, 170, 188, 0.28);
+  border-radius: 4px;
+  color: transparent;
+  background: #fff;
+  font-size: 11px;
+  line-height: 1;
+}
+
+.wish-image-toggle input:checked + span {
+  border-color: var(--color-accent);
+  background: var(--color-accent);
+  color: #fff;
 }
 
 .wish-char-counter {
@@ -720,6 +775,20 @@ button {
 
   .wish-input-content {
     padding: 6px 8px;
+    font-size: 11px;
+  }
+
+  .wish-input-image {
+    order: 9;
+    flex-basis: 100%;
+    min-width: 0;
+    padding: 6px 8px;
+    font-size: 11px;
+  }
+
+  .wish-image-toggle {
+    min-height: 30px;
+    padding: 5px 8px;
     font-size: 11px;
   }
 

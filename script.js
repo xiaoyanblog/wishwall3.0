@@ -41,6 +41,7 @@
     initColorPicker();
     initTypeToggle();
     initCharCounter();
+    initImageInput();
     initSubmit();
     await loadSecuritySettings();
     await loadApprovedWishes();
@@ -343,6 +344,20 @@
     counter.textContent = `${input.value.length}/${maxLen}`;
   }
 
+  function initImageInput() {
+    const toggle = document.getElementById("wishImageToggle");
+    const imageInput = document.getElementById("wishImageUrl");
+
+    toggle.addEventListener("change", () => {
+      imageInput.hidden = !toggle.checked;
+      if (toggle.checked) {
+        imageInput.focus();
+      } else {
+        imageInput.value = "";
+      }
+    });
+  }
+
   function initSubmit() {
     const button = document.getElementById("wishSubmitBtn");
     const input = document.getElementById("wishContent");
@@ -362,10 +377,18 @@
     const button = document.getElementById("wishSubmitBtn");
     const contentInput = document.getElementById("wishContent");
     const nickInput = document.getElementById("wishNick");
+    const imageToggle = document.getElementById("wishImageToggle");
+    const imageInput = document.getElementById("wishImageUrl");
     const content = contentInput.value.trim();
+    const doneImage = imageToggle.checked ? safeImageUrl(imageInput.value) : "";
 
     if (!content) {
       toast("写点什么吧");
+      return;
+    }
+
+    if (imageToggle.checked && imageInput.value.trim() && !doneImage) {
+      toast("图片地址需要是 https 链接");
       return;
     }
 
@@ -392,6 +415,7 @@
           content,
           nickname: nickInput.value.trim() || "匿名",
           status: types[currentTypeIndex].slug === "wish" ? "doing" : "",
+          doneImage,
           captchaToken
         })
       });
@@ -402,6 +426,9 @@
       }
 
       contentInput.value = "";
+      imageToggle.checked = false;
+      imageInput.value = "";
+      imageInput.hidden = true;
       updateCharCounter();
       hideCaptchaDialog();
       toast("发布成功");

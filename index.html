@@ -13,7 +13,7 @@
         <path d="M7.5 14.25a5.75 5.75 0 1 1 4.07 1.68l-1.63 1.63H7.88v2.06H5.82v2.06H2.5v-3.32l5-5Zm8.75-.75a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Zm1.35-4.85a1.25 1.25 0 1 1-1.77 1.77 1.25 1.25 0 0 1 1.77-1.77Z"/>
       </svg>
     </a>
-    <a class="floating-link source-link" href="https://github.com/xiaoyanblog/wishwall2.0" target="_blank" rel="noopener noreferrer" aria-label="查看本项目源码">
+    <a class="floating-link source-link" href="https://github.com/xiaoyanblog/wishwall3.0" target="_blank" rel="noopener noreferrer" aria-label="查看本项目源码">
       <svg viewBox="0 0 24 24" aria-hidden="true">
         <path d="M12 2C6.48 2 2 6.58 2 12.25c0 4.52 2.87 8.35 6.84 9.71.5.1.68-.22.68-.49v-1.72c-2.78.62-3.37-1.37-3.37-1.37-.45-1.19-1.11-1.5-1.11-1.5-.91-.64.07-.63.07-.63 1.01.07 1.54 1.06 1.54 1.06.89 1.57 2.34 1.12 2.91.86.09-.67.35-1.12.63-1.38-2.22-.26-4.56-1.14-4.56-5.06 0-1.12.39-2.03 1.03-2.75-.1-.26-.45-1.31.1-2.72 0 0 .84-.28 2.75 1.05A9.33 9.33 0 0 1 12 6.96c.85 0 1.7.12 2.5.35 1.9-1.33 2.74-1.05 2.74-1.05.55 1.41.2 2.46.1 2.72.64.72 1.03 1.63 1.03 2.75 0 3.93-2.34 4.79-4.57 5.05.36.32.68.94.68 1.9v2.79c0 .27.18.59.69.49A10.13 10.13 0 0 0 22 12.25C22 6.58 17.52 2 12 2Z"/>
       </svg>
@@ -45,6 +45,12 @@
     <input type="text" class="wish-input-nick" id="wishNick" placeholder="昵称" maxlength="20">
     <input type="text" class="wish-input-content" id="wishContent" placeholder="写下你想说的话..." maxlength="200">
     <span class="wish-char-counter" id="wishCharCounter">0/200</span>
+    <label class="wish-image-toggle">
+      <input id="wishImageToggle" type="checkbox">
+      <span aria-hidden="true">√</span>
+      添加照片
+    </label>
+    <input type="url" class="wish-input-image" id="wishImageUrl" placeholder="图片 URL / 图床地址" maxlength="500" hidden>
     <div class="wish-colors" id="wishColorPicker" aria-label="颜色">
       <button class="wish-color-dot active" type="button" data-color="green" style="background:#c8e6c9" aria-label="绿色"></button>
       <button class="wish-color-dot" type="button" data-color="yellow" style="background:#fff9c4" aria-label="黄色"></button>

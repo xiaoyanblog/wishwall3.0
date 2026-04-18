@@ -58,6 +58,7 @@ async function submitWish(req, res) {
     const type = ALLOWED_TYPES.has(body.type) ? body.type : "love";
     const color = ALLOWED_COLORS.has(body.color) ? body.color : "green";
     const status = ALLOWED_STATUS.has(body.status) ? body.status : "";
+    const doneImage = cleanUrl(body.doneImage, 500);
 
     if (!content) {
       return res.status(400).json({ error: "写点什么吧" });
@@ -92,6 +93,7 @@ async function submitWish(req, res) {
       type,
       color,
       status,
+      done_image: doneImage,
       approved: true
     };
 
