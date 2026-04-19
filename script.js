@@ -44,6 +44,9 @@
     initImageInput();
     initKeyboardLayout();
     initSubmit();
+    window.addEventListener("resize", () => {
+      window.requestAnimationFrame(keepVisibleCardsInsideBoard);
+    });
     await loadSecuritySettings();
     await loadApprovedWishes();
   }
@@ -129,9 +132,7 @@
 
       placeCard(card, wish, index);
       initDrag(card, board);
-      card.addEventListener("pointerdown", () => {
-        card.style.zIndex = ++zCounter;
-      });
+      initCardLayering(card);
       fragment.appendChild(card);
     });
 
@@ -230,37 +231,93 @@
   function keepCardInsideBoard(card) {
     const board = document.getElementById("wishBoard");
     const margin = window.innerWidth < 768 ? 10 : 16;
-    const maxLeft = Math.max(0, board.offsetWidth - card.offsetWidth - margin);
-    const maxTop = Math.max(0, board.offsetHeight - card.offsetHeight - margin);
+    const bounds = getCardBounds(board, card.offsetWidth, card.offsetHeight, margin);
 
-    card.style.left = `${clamp(card.offsetLeft, margin, maxLeft)}px`;
-    card.style.top = `${clamp(card.offsetTop, margin, maxTop)}px`;
+    card.style.left = `${clamp(card.offsetLeft, bounds.minLeft, bounds.maxLeft)}px`;
+    card.style.top = `${clamp(card.offsetTop, bounds.minTop, bounds.maxTop)}px`;
+  }
+
+  function keepVisibleCardsInsideBoard() {
+    document.querySelectorAll(".wish-card").forEach((card) => {
+      if (card.style.display !== "none") {
+        keepCardInsideBoard(card);
+      }
+    });
   }
 
   function placeCard(card, wish, index) {
     const board = document.getElementById("wishBoard");
-    const boardRect = board.getBoundingClientRect();
     const mobile = window.innerWidth < 768;
     const cardW = mobile ? (window.innerWidth < 480 ? 124 : 150) : 230;
     const cardH = wish.doneImage ? (mobile ? 176 : 246) : (mobile ? 112 : 144);
     const margin = mobile ? 10 : 16;
-    const position = wish.position || randomPosition(boardRect, cardW, cardH, margin);
+    const bounds = getCardBounds(board, cardW, cardH, margin);
+    const position = wish.position || randomPosition(bounds);
 
-    card.style.left = `${position.left}px`;
-    card.style.top = `${position.top}px`;
+    card.style.left = `${clamp(position.left, bounds.minLeft, bounds.maxLeft)}px`;
+    card.style.top = `${clamp(position.top, bounds.minTop, bounds.maxTop)}px`;
     card.style.zIndex = wish.z || ++zCounter;
     card.style.transform = `rotate(${position.rotate.toFixed(2)}deg)`;
     card.style.animation = `wishCardIn 0.4s ease ${index * 35}ms forwards`;
   }
 
-  function randomPosition(boardRect, cardW, cardH, margin) {
-    const maxLeft = Math.max(boardRect.width - cardW - margin, margin);
-    const maxTop = Math.max(boardRect.height - cardH - margin, margin);
+  function getCardBounds(board, cardW, cardH, margin) {
+    const boardRect = board.getBoundingClientRect();
+    const inputBar = document.getElementById("wishInputBar");
+    let maxLeft = Math.max(margin, board.offsetWidth - cardW - margin);
+    let maxTop = Math.max(margin, board.offsetHeight - cardH - margin);
+
+    if (inputBar) {
+      const inputRect = inputBar.getBoundingClientRect();
+      const gap = window.innerWidth < 768 ? 10 : 18;
+      const inputTopInBoard = inputRect.top - boardRect.top - gap;
+
+      if (inputTopInBoard > margin) {
+        maxTop = Math.min(maxTop, inputTopInBoard - cardH);
+      }
+    }
+
     return {
-      left: margin + Math.random() * (maxLeft - margin),
-      top: margin + Math.random() * (maxTop - margin),
+      minLeft: margin,
+      minTop: margin,
+      maxLeft: Math.max(margin, maxLeft),
+      maxTop: Math.max(margin, maxTop)
+    };
+  }
+
+  function randomPosition(bounds) {
+    return {
+      left: bounds.minLeft + Math.random() * (bounds.maxLeft - bounds.minLeft),
+      top: bounds.minTop + Math.random() * (bounds.maxTop - bounds.minTop),
       rotate: Math.random() * 6 - 3
     };
+  }
+
+  function initCardLayering(card) {
+    let leaveTimer = null;
+
+    card.addEventListener("pointerenter", () => {
+      window.clearTimeout(leaveTimer);
+      if (!card.classList.contains("dragging")) {
+        card.classList.add("is-raised");
+        card.style.zIndex = ++zCounter;
+      }
+    });
+
+    card.addEventListener("pointerleave", () => {
+      if (card.classList.contains("dragging")) {
+        return;
+      }
+      leaveTimer = window.setTimeout(() => {
+        card.classList.remove("is-raised");
+      }, 140);
+    });
+
+    card.addEventListener("pointerdown", () => {
+      window.clearTimeout(leaveTimer);
+      card.classList.add("is-raised");
+      card.style.zIndex = ++zCounter;
+    });
   }
 
   function initDrag(card, board) {
@@ -293,14 +350,15 @@
       }
 
       const boardW = board.offsetWidth;
-      const boardH = board.offsetHeight;
       const cardW = card.offsetWidth;
       const cardH = card.offsetHeight;
+      const margin = window.innerWidth < 768 ? 10 : 16;
+      const bounds = getCardBounds(board, cardW, cardH, margin);
       let nextLeft = origX + event.clientX - startX;
       let nextTop = origY + event.clientY - startY;
 
-      nextLeft = clamp(nextLeft, 0, Math.max(0, boardW - cardW));
-      nextTop = clamp(nextTop, 0, Math.max(0, boardH - cardH));
+      nextLeft = clamp(nextLeft, bounds.minLeft, Math.min(bounds.maxLeft, Math.max(0, boardW - cardW)));
+      nextTop = clamp(nextTop, bounds.minTop, bounds.maxTop);
       card.style.left = `${nextLeft}px`;
       card.style.top = `${nextTop}px`;
     });
@@ -315,6 +373,7 @@
       card.classList.remove("dragging");
       header.releasePointerCapture(pointerId);
       pointerId = null;
+      keepCardInsideBoard(card);
     }
   }
 
@@ -346,6 +405,7 @@
     });
 
     empty.style.display = visible === 0 ? "flex" : "none";
+    window.requestAnimationFrame(keepVisibleCardsInsideBoard);
   }
 
   function initColorPicker() {
@@ -384,6 +444,7 @@
 
     toggle.addEventListener("change", () => {
       imageInput.hidden = !toggle.checked;
+      window.requestAnimationFrame(keepVisibleCardsInsideBoard);
       if (toggle.checked) {
         imageInput.focus();
       } else {
@@ -406,6 +467,7 @@
           if (!inputBar.contains(document.activeElement)) {
             document.body.classList.remove("input-focused");
             document.documentElement.style.setProperty("--keyboard-offset", "0px");
+            window.requestAnimationFrame(keepVisibleCardsInsideBoard);
           }
         }, 120);
       });
@@ -426,6 +488,7 @@
     const hiddenHeight = Math.max(0, window.innerHeight - viewport.height - viewport.offsetTop);
     const offset = window.innerWidth < 768 ? hiddenHeight : 0;
     document.documentElement.style.setProperty("--keyboard-offset", `${Math.round(offset)}px`);
+    window.requestAnimationFrame(keepVisibleCardsInsideBoard);
   }
 
   function initSubmit() {
