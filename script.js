@@ -44,9 +44,6 @@
     initImageInput();
     initKeyboardLayout();
     initSubmit();
-    window.addEventListener("resize", () => {
-      window.requestAnimationFrame(keepVisibleCardsInsideBoard);
-    });
     await loadSecuritySettings();
     await loadApprovedWishes();
   }
@@ -237,14 +234,6 @@
     card.style.top = `${clamp(card.offsetTop, bounds.minTop, bounds.maxTop)}px`;
   }
 
-  function keepVisibleCardsInsideBoard() {
-    document.querySelectorAll(".wish-card").forEach((card) => {
-      if (card.style.display !== "none") {
-        keepCardInsideBoard(card);
-      }
-    });
-  }
-
   function placeCard(card, wish, index) {
     const board = document.getElementById("wishBoard");
     const mobile = window.innerWidth < 768;
@@ -394,7 +383,6 @@
     });
 
     empty.style.display = visible === 0 ? "flex" : "none";
-    window.requestAnimationFrame(keepVisibleCardsInsideBoard);
   }
 
   function initColorPicker() {
@@ -433,7 +421,6 @@
 
     toggle.addEventListener("change", () => {
       imageInput.hidden = !toggle.checked;
-      window.requestAnimationFrame(keepVisibleCardsInsideBoard);
       if (toggle.checked) {
         imageInput.focus();
       } else {
@@ -456,7 +443,6 @@
           if (!inputBar.contains(document.activeElement)) {
             document.body.classList.remove("input-focused");
             document.documentElement.style.setProperty("--keyboard-offset", "0px");
-            window.requestAnimationFrame(keepVisibleCardsInsideBoard);
           }
         }, 120);
       });
@@ -477,7 +463,6 @@
     const hiddenHeight = Math.max(0, window.innerHeight - viewport.height - viewport.offsetTop);
     const offset = window.innerWidth < 768 ? hiddenHeight : 0;
     document.documentElement.style.setProperty("--keyboard-offset", `${Math.round(offset)}px`);
-    window.requestAnimationFrame(keepVisibleCardsInsideBoard);
   }
 
   function initSubmit() {
