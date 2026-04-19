@@ -13,6 +13,7 @@
   --space-4: 16px;
   --space-5: 20px;
   --space-8: 32px;
+  --keyboard-offset: 0px;
   font-family: "Microsoft YaHei", "PingFang SC", "Segoe UI", sans-serif;
 }
 
@@ -724,6 +725,7 @@ button {
 
   .container {
     padding-top: 18px;
+    padding-bottom: 124px;
   }
 
   .floating-links {
@@ -742,7 +744,7 @@ button {
   }
 
   .wish-board {
-    height: calc(100vh - 198px);
+    height: calc(100vh - 246px - var(--keyboard-offset));
     min-height: 360px;
     overflow: hidden;
   }
@@ -799,7 +801,7 @@ button {
 
   .wish-input-bar {
     right: 8px;
-    bottom: 8px;
+    bottom: calc(8px + var(--keyboard-offset));
     left: 8px;
     width: auto;
     max-width: none;
@@ -807,6 +809,19 @@ button {
     gap: 6px;
     padding: 8px;
     transform: none;
+  }
+
+  body.input-focused .wish-input-bar {
+    z-index: 260;
+    box-shadow: 0 10px 34px rgba(0, 0, 0, 0.16);
+  }
+
+  body.input-focused .wish-board {
+    overflow: hidden;
+  }
+
+  body.input-focused .wish-toast {
+    bottom: calc(94px + var(--keyboard-offset));
   }
 
   .wish-input-nick {

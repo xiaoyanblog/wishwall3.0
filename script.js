@@ -42,6 +42,7 @@
     initTypeToggle();
     initCharCounter();
     initImageInput();
+    initKeyboardLayout();
     initSubmit();
     await loadSecuritySettings();
     await loadApprovedWishes();
@@ -389,6 +390,42 @@
         imageInput.value = "";
       }
     });
+  }
+
+  function initKeyboardLayout() {
+    const inputBar = document.getElementById("wishInputBar");
+    const focusable = inputBar.querySelectorAll("input, button");
+
+    focusable.forEach((item) => {
+      item.addEventListener("focus", () => {
+        document.body.classList.add("input-focused");
+        updateKeyboardOffset();
+      });
+      item.addEventListener("blur", () => {
+        window.setTimeout(() => {
+          if (!inputBar.contains(document.activeElement)) {
+            document.body.classList.remove("input-focused");
+            document.documentElement.style.setProperty("--keyboard-offset", "0px");
+          }
+        }, 120);
+      });
+    });
+
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener("resize", updateKeyboardOffset);
+      window.visualViewport.addEventListener("scroll", updateKeyboardOffset);
+    }
+  }
+
+  function updateKeyboardOffset() {
+    if (!window.visualViewport || !document.body.classList.contains("input-focused")) {
+      return;
+    }
+
+    const viewport = window.visualViewport;
+    const hiddenHeight = Math.max(0, window.innerHeight - viewport.height - viewport.offsetTop);
+    const offset = window.innerWidth < 768 ? hiddenHeight : 0;
+    document.documentElement.style.setProperty("--keyboard-offset", `${Math.round(offset)}px`);
   }
 
   function initSubmit() {
