@@ -256,26 +256,15 @@
 
     card.style.left = `${clamp(position.left, bounds.minLeft, bounds.maxLeft)}px`;
     card.style.top = `${clamp(position.top, bounds.minTop, bounds.maxTop)}px`;
-    card.style.zIndex = wish.z || ++zCounter;
+    const savedZ = Number(wish.z);
+    card.style.zIndex = savedZ > 0 && savedZ < 9000 ? savedZ : nextCardZ();
     card.style.transform = `rotate(${position.rotate.toFixed(2)}deg)`;
     card.style.animation = `wishCardIn 0.4s ease ${index * 35}ms forwards`;
   }
 
   function getCardBounds(board, cardW, cardH, margin) {
-    const boardRect = board.getBoundingClientRect();
-    const inputBar = document.getElementById("wishInputBar");
     let maxLeft = Math.max(margin, board.offsetWidth - cardW - margin);
     let maxTop = Math.max(margin, board.offsetHeight - cardH - margin);
-
-    if (inputBar) {
-      const inputRect = inputBar.getBoundingClientRect();
-      const gap = window.innerWidth < 768 ? 10 : 18;
-      const inputTopInBoard = inputRect.top - boardRect.top - gap;
-
-      if (inputTopInBoard > margin) {
-        maxTop = Math.min(maxTop, inputTopInBoard - cardH);
-      }
-    }
 
     return {
       minLeft: margin,
@@ -300,7 +289,7 @@
       window.clearTimeout(leaveTimer);
       if (!card.classList.contains("dragging")) {
         card.classList.add("is-raised");
-        card.style.zIndex = ++zCounter;
+        card.style.zIndex = nextCardZ();
       }
     });
 
@@ -316,7 +305,7 @@
     card.addEventListener("pointerdown", () => {
       window.clearTimeout(leaveTimer);
       card.classList.add("is-raised");
-      card.style.zIndex = ++zCounter;
+      card.style.zIndex = nextCardZ();
     });
   }
 
@@ -337,7 +326,7 @@
       pointerId = event.pointerId;
       header.setPointerCapture(pointerId);
       card.classList.add("dragging");
-      card.style.zIndex = ++zCounter;
+      card.style.zIndex = nextCardZ();
       startX = event.clientX;
       startY = event.clientY;
       origX = card.offsetLeft;
@@ -675,6 +664,11 @@
 
   function clamp(value, min, max) {
     return Math.min(Math.max(value, min), max);
+  }
+
+  function nextCardZ() {
+    zCounter = zCounter >= 9000 ? 300 : zCounter + 1;
+    return zCounter;
   }
 
   function safeImageUrl(value) {

@@ -451,7 +451,7 @@ button {
 
 .wish-input-bar {
   position: fixed;
-  z-index: 100;
+  z-index: 12000;
   bottom: 48px;
   left: 50%;
   display: flex;
@@ -463,13 +463,14 @@ button {
   padding: 10px 16px;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
-  background: rgba(255, 255, 255, 0.86);
+  background: rgba(255, 255, 255, 0.78);
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
   transform: translateX(-50%);
   backdrop-filter: blur(14px);
 }
 
 .wish-input-bar:focus-within {
+  background: rgba(255, 255, 255, 0.88);
   box-shadow: 0 6px 28px rgba(0, 0, 0, 0.12);
 }
 
@@ -746,9 +747,9 @@ button {
   }
 
   .wish-board {
-    height: calc(100vh - 246px - var(--keyboard-offset));
+    height: calc(100vh - 246px);
     min-height: 360px;
-    overflow: hidden;
+    overflow: visible;
   }
 
   .wish-card {
@@ -814,12 +815,8 @@ button {
   }
 
   body.input-focused .wish-input-bar {
-    z-index: 260;
+    z-index: 12000;
     box-shadow: 0 10px 34px rgba(0, 0, 0, 0.16);
-  }
-
-  body.input-focused .wish-board {
-    overflow: hidden;
   }
 
   body.input-focused .wish-toast {
