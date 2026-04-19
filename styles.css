@@ -825,13 +825,20 @@ button {
 
   .wish-input-nick {
     width: 52px;
+    flex: 0 0 52px;
     padding: 6px;
     font-size: 11px;
   }
 
   .wish-input-content {
+    flex: 1 1 0;
+    min-width: 0;
     padding: 6px 8px;
     font-size: 11px;
+  }
+
+  .wish-char-counter {
+    flex: 0 0 auto;
   }
 
   .wish-input-image {
