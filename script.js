@@ -188,8 +188,10 @@
 
     image.dataset.loadingStarted = "true";
     image.onload = () => {
+      applyImageLayout(card, image);
       card.classList.remove("image-loading");
       card.classList.add("image-loaded");
+      keepCardInsideBoard(card);
     };
     image.onerror = () => {
       card.classList.remove("image-loading");
@@ -201,6 +203,37 @@
     }
 
     image.src = imageUrl;
+  }
+
+  function applyImageLayout(card, image) {
+    const width = image.naturalWidth || 16;
+    const height = image.naturalHeight || 9;
+    const ratio = width / height;
+
+    card.style.setProperty("--wish-image-ratio", `${width} / ${height}`);
+    card.classList.remove("image-landscape", "image-portrait", "image-square");
+
+    if (ratio >= 1.2) {
+      card.classList.add("image-landscape");
+      return;
+    }
+
+    if (ratio <= 0.85) {
+      card.classList.add("image-portrait");
+      return;
+    }
+
+    card.classList.add("image-square");
+  }
+
+  function keepCardInsideBoard(card) {
+    const board = document.getElementById("wishBoard");
+    const margin = window.innerWidth < 768 ? 10 : 16;
+    const maxLeft = Math.max(0, board.offsetWidth - card.offsetWidth - margin);
+    const maxTop = Math.max(0, board.offsetHeight - card.offsetHeight - margin);
+
+    card.style.left = `${clamp(card.offsetLeft, margin, maxLeft)}px`;
+    card.style.top = `${clamp(card.offsetTop, margin, maxTop)}px`;
   }
 
   function placeCard(card, wish, index) {

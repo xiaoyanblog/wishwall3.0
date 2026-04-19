@@ -185,6 +185,7 @@ button {
 
 .wish-card {
   --card-w: 230px;
+  --wish-image-ratio: 16 / 9;
   position: absolute;
   width: var(--card-w);
   border: 1px solid rgba(0, 0, 0, 0.06);
@@ -307,7 +308,7 @@ button {
   display: none;
   position: relative;
   width: calc(100% - 32px);
-  height: 140px;
+  aspect-ratio: var(--wish-image-ratio);
   margin: 6px 16px 0;
   padding: 4px;
   border-radius: 8px;
@@ -318,6 +319,11 @@ button {
 .wish-card.has-image .wish-card-image-frame {
   display: grid;
   place-items: center;
+}
+
+.wish-card.image-loading .wish-card-image-frame {
+  height: 140px;
+  aspect-ratio: auto;
 }
 
 .wish-card-done-img {
@@ -332,6 +338,18 @@ button {
 
 .wish-card.image-loaded .wish-card-done-img {
   opacity: 1;
+}
+
+.wish-card.image-landscape {
+  --card-w: 320px;
+}
+
+.wish-card.image-portrait {
+  --card-w: 230px;
+}
+
+.wish-card.image-square {
+  --card-w: 260px;
 }
 
 .wish-card-image-spinner {
@@ -733,6 +751,18 @@ button {
     --card-w: 150px;
   }
 
+  .wish-card.image-landscape {
+    --card-w: 220px;
+  }
+
+  .wish-card.image-portrait {
+    --card-w: 156px;
+  }
+
+  .wish-card.image-square {
+    --card-w: 176px;
+  }
+
   .wish-card-body {
     padding: 8px 10px 6px;
     font-size: 12px;
@@ -759,9 +789,12 @@ button {
 
   .wish-card-image-frame {
     width: calc(100% - 20px);
-    height: 120px;
     margin: 4px 10px 0;
     padding: 3px;
+  }
+
+  .wish-card.image-loading .wish-card-image-frame {
+    height: 120px;
   }
 
   .wish-input-bar {
@@ -820,6 +853,18 @@ button {
     --card-w: 124px;
   }
 
+  .wish-card.image-landscape {
+    --card-w: 190px;
+  }
+
+  .wish-card.image-portrait {
+    --card-w: 136px;
+  }
+
+  .wish-card.image-square {
+    --card-w: 150px;
+  }
+
   .wish-card-body {
     padding: 6px 8px 4px;
     font-size: 11px;
@@ -836,7 +881,10 @@ button {
 
   .wish-card-image-frame {
     width: calc(100% - 16px);
-    height: 108px;
     margin: 4px 8px 0;
+  }
+
+  .wish-card.image-loading .wish-card-image-frame {
+    height: 108px;
   }
 }
